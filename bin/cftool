@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+require 'cloud_formation_tool'
+
+begin
+  CloudFormationTool::CLI::Main.run
+rescue CloudFormationTool::Errors::AppError => e
+  warn e.message
+end
