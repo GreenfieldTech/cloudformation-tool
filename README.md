@@ -59,6 +59,43 @@ effect:
     other than the one where it was defined should use the mangled form if they mean the new
     parameter or the original form if they mean the original parameter
 
+#### Example:
+
+```
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Example cloud formation template"
+Parameters:
+  DomainName:
+    Description: "The DNS domain name for the system"
+    Type: String
+    Default: example.com
+  AMI:
+    Description: "The AMI ID for the image to deploy"
+    Type: String
+    Default: ami-af4333cf
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+  SecurityGroupExample:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC 
+      GroupDescription: example security group
+      SecurityGroupIngress:
+        - { IpProtocol: icmp, CidrIp: 0.0.0.0/0, FromPort: -1, ToPort: -1 }
+        - { IpProtocol: tcp, CidrIp: 0.0.0.0/0, FromPort: 22, ToPort: 22 }
+
+Include:
+ - network
+ - servers/global
+ - outputs.yaml
+```
+
 #### Logical resource merging
 
 Logical resources are not mangled - if multiple resources with the same name are defined in 
@@ -74,8 +111,25 @@ expected to be a cloud-init file with the extension `.init`.
 
 The loaded file will be checked that it does not exceed the user-data size limitation. If the
 file is bigger than can fit in the AWS user-data block, it will first be compressed using gzip
-and if it is still too large, it will be uploaded to S3 and the user-data block will be set with
-a cloud-init download reference to the S3 object.
+and if it is still too large, it will be uploaded to S3 and the user-data block will be set 
+with a cloud-init download reference to the S3 object.
+
+#### Example:
+
+```
+  LaunchConfigurationForServer:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      AssociatePublicIpAddress: true
+      IamInstanceProfile: !Ref InstanceProfileForServer
+      ImageId: !Ref: AMI # read from parameters
+      InstanceType: !Ref InstanceType # read from parameters
+      KeyName: !Ref: KeyName # read from parameters
+      SecurityGroups:
+        - Ref: SecurityGroupExample
+      UserData:
+        File: config.init 
+```
 
 ### Loading Lambda code
 
@@ -85,6 +139,25 @@ from which the code is to be uploaded to AWS Lambda. The tool will download the 
 the specified URL, upload it to S3 and specify the correct S3 location for CloudFormation.
 
 In the future we plan to add support for specifying `File` to upload from a local file.
+
+#### Example:
+
+```
+  LambdaExample:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Join [ "-", [ route53-update, !Ref SystemTag ] ]
+      Runtime: java8
+      Code:
+         URL: https://github.com/GreenfieldTech/lambda-route53-updates/releases/download/0.2.5/lambda-route53-updates-0.2.5.jar
+      Description: Update DNS with autoscaling servers
+      MemorySize: 256
+      Timeout: 60
+      Handler: net.gftc.aws.route53.NotifyRecords
+      Environment:
+        Variables: # set variables here, see lambda-route53-updates for documentation ...
+      Role: !GetAtt [ LambdaExecutionRole, Arn ]
+```
 
 ## Caching
 
