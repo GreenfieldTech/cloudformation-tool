@@ -122,9 +122,9 @@ with a cloud-init download reference to the S3 object.
     Properties:
       AssociatePublicIpAddress: true
       IamInstanceProfile: !Ref InstanceProfileForServer
-      ImageId: !Ref: AMI # read from parameters
+      ImageId: !Ref AMI # read from parameters
       InstanceType: !Ref InstanceType # read from parameters
-      KeyName: !Ref: KeyName # read from parameters
+      KeyName: !Ref KeyName # read from parameters
       SecurityGroups:
         - Ref: SecurityGroupExample
       UserData:
