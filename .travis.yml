@@ -1,6 +1,7 @@
 language: ruby
 rvm:
  - ruby-head
+script: "bundle exec gem build cloudformation-tool.gemspec"
 deploy:
   provider: rubygems
   api_key:
