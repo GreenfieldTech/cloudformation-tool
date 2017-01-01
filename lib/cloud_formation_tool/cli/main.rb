@@ -6,7 +6,10 @@ module CloudFormationTool
   module CLI
     class Main < Clamp::Command
       
-    cftool = Class.new.include(CloudFormationTool).new
+      class CFToolHelper
+        include CloudFormationTool
+      end
+      cftool = CFToolHelper.new
       
       banner "Compile and deploy CloudFormation templates"
       
