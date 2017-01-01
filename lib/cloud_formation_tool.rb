@@ -60,8 +60,24 @@ module CloudFormationTool
   end
   
   def s3_bucket_name(region)
-    key = 'yo2xjcs6qtcj'
-    ($__aws_s3_cf_bucket ||= {})[region] ||= "cf-templates-#{key}-#{region}"
+    (($__aws_s3_cf_bucket ||= {})[region] ||= (
+      # see if we already have a cf-templates bucket for this region
+      awss3.list_buckets.buckets.select do |b|
+        b.name =~ /cf-templates-(\w+)-#{region}/
+      end.first ||
+      # otherwise try to create one
+      awss3.create_bucket({
+        acl: "private",
+        bucket: cf_bucket_name(region),
+        create_bucket_configuration: { location_constraint: region }
+      }).tap { |b| log("Creating CF template bucket #{b[:name]}") }
+    ))[:name]
+  end
+  
+  def cf_bucket_name(region, key = nil)
+    # generate random key if one wasn't given
+    key ||= ((0...12).map { [*'a'..'z',*'0'..'9'][rand(36)] }.join)
+    "cf-templates-#{key}-#{region}"
   end
 
 end
