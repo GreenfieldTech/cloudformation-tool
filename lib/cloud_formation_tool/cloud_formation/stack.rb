@@ -106,7 +106,7 @@ module CloudFormationTool
               done = (ev.resource_type == "AWS::CloudFormation::Stack" and ev.resource_status =~ /(_COMPLETE|_FAILED)$/)
             end
           end
-        rescue StackDoesNotExistError => e
+        rescue CloudFormationTool::Errors::StackDoesNotExistError => e
           puts "Stack #{name} does not exist"
         end
       end
