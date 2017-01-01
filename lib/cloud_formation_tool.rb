@@ -18,7 +18,7 @@ module CloudFormationTool
   
   def find_profile(dir = nil)
     dir ||= Dir.pwd
-    return nil if (dir == "/")
+    return profile if (dir == "/")
     begin
       return File.read("#{dir}/.awsprofile").chomp
     rescue Errno::ENOENT
@@ -27,11 +27,15 @@ module CloudFormationTool
   end
   
   def region
-    $__region ||= 'us-west-1'
+    $__region ||= (ENV['AWS_DEFAULT_REGION'] || 'us-west-1')
+  end
+  
+  def profile
+    $__profile ||= (ENV['AWS_DEFAULT_PROFILE'] || 'default')
   end
   
   def awscreds
-    $__aws_creds ||= Aws::SharedCredentials.new(profile_name: (find_profile || 'default'))
+    $__aws_creds ||= Aws::SharedCredentials.new(profile_name: find_profile)
   end
   
   def aws_config
@@ -60,18 +64,25 @@ module CloudFormationTool
   end
   
   def s3_bucket_name(region)
-    (($__aws_s3_cf_bucket ||= {})[region] ||= (
-      # see if we already have a cf-templates bucket for this region
-      awss3.list_buckets.buckets.select do |b|
+    name = nil
+    # see if we already have a cf-templates bucket for this region
+    bucket = awss3.list_buckets.buckets.select do |b|
         b.name =~ /cf-templates-(\w+)-#{region}/
-      end.first ||
-      # otherwise try to create one
+    end.first
+    
+    # otherwise try to create one
+    if bucket.nil?
+      name = cf_bucket_name(region)
+      log("Creating CF template bucket #{name}")
       awss3.create_bucket({
         acl: "private",
-        bucket: cf_bucket_name(region),
+        bucket: name,
         create_bucket_configuration: { location_constraint: region }
-      }).tap { |b| log("Creating CF template bucket #{b[:name]}") }
-    ))[:name]
+      })
+      name
+    else
+      bucket[:name]
+    end
   end
   
   def cf_bucket_name(region, key = nil)

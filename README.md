@@ -172,7 +172,7 @@ detected.
 
 The CloudFormation Tool uses a "sub-command CLI syntax" (like GIT, for example).
 
-Usage: `cftool <command> <options...>`
+Usage: `cftool [options] <command> <command-options...>`
 
 The following commands are supported:
 
@@ -194,4 +194,11 @@ The following commands are supported:
 
 Please see the specific help for each command by running `cftool <command> --help` for
 more details and specific options.
- 
+
+### Region Selection
+
+The AWS region to be used can be select by specifying top level option (i.e. before the command name) `-r <region>`, by providing the standard environment variable `AWS_DEFAULT_REGION` or it will default to `us-west-1`
+
+### Credentials Selection
+
+The tool will use the standard AWS credentials selection process, except when you want to use AWS CLI configured credential profiles, you may select to use a profile other than "default" by specifying the top level option (i.e. before the command name) `-p <profile>`, by providing the standard environment variable `AWS_DEFAULT_PROFILE` or by having a file called `.awsprofile` - whose content is the name of a valid AWS REGION - in a parent directory (at any level up to the root directory).
