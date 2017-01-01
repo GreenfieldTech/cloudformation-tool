@@ -140,7 +140,7 @@ module CloudFormationTool
           end
         rescue Aws::CloudFormation::Errors::ValidationError => e
           if e.message =~ /does not exist/
-            raise StackDoesNotExistError, "Stack does not exist"
+            raise CloudFormationTool::Errors::StackDoesNotExistError, "Stack does not exist"
           else
             raise e
           end
