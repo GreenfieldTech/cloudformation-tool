@@ -6,11 +6,14 @@ module CloudFormationTool
     class Servers < Clamp::Command
       include CloudFormationTool
       
-      parameter "STACK_NAME", "Name of the stack to delete"
+      parameter "STACK_NAME", "Name of the stack to list servers for"
+      parameter "[ASG_NAME]", "Select only this specific auto scaling group"
       
       def execute
         st = CloudFormation::Stack.new(stack_name)
-        ts = st.asgroups.collect do |res|
+        ts = st.asgroups.select do |res|
+          asg_name.nil? or (res.logical_resource_id == asg_name)
+        end.collect do |res|
           Thread.new do
             awsas.describe_auto_scaling_groups({
               auto_scaling_group_names: [ res.physical_resource_id ]
