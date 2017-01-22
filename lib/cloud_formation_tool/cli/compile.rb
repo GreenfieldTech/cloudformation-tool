@@ -10,7 +10,7 @@ module CloudFormationTool
           puts CloudInit.new(file).compile
         else
           puts CloudFormation.parse(file).to_yaml
-  #        raise AppError.new("not a valid template file. Only .init and .yaml are supported")
+  #        raise CloudFormationTool::Errors::AppError.new("not a valid template file. Only .init and .yaml are supported")
         end
       end
       

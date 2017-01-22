@@ -25,7 +25,7 @@ module CloudFormationTool
           log "redirected to #{location}"
           fetch(location, limit - 1)
         else
-          raise AppError, "Error downloading #{url}: #{response.value}"
+          raise CloudFormationTool::Errors::AppError, "Error downloading #{url}: #{response.value}"
         end
       end
       

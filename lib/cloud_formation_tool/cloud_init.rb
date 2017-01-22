@@ -14,7 +14,7 @@ module CloudFormationTool
       begin
         @initfile = YAML.load(File.read(path)).to_h
       rescue Errno::ENOENT => e
-        raise AppError.new("Error reading #{@path}: " + e.message)
+        raise CloudFormationTool::Errors::AppError.new("Error reading #{@path}: " + e.message)
       end
     end
   
@@ -26,9 +26,9 @@ module CloudFormationTool
           begin
             read_file_content(basepath + "/" + file.delete('file'), file)
           rescue Errno::EISDIR => e
-            raise AppError, "#{path} - error loading embedded file for #{file['path']}: " + e.message
+            raise CloudFormationTool::Errors::AppError, "#{path} - error loading embedded file for #{file['path']}: " + e.message
           rescue Errno::ENOENT => e
-            raise AppError, "#{path} - error loading embedded file for #{file['path']}: " + e.message
+            raise CloudFormationTool::Errors::AppError, "#{path} - error loading embedded file for #{file['path']}: " + e.message
           end
         else
           file
@@ -36,7 +36,7 @@ module CloudFormationTool
       end
       @initfile['write_files'] += (@initfile.delete('write_directories') || []).collect do |directory|
         realdir = "#{basepath}/#{directory['source']}"
-        raise AppError.new("Cloud-init file #{path} references missing directory #{realdir}") unless File.exist? realdir
+        raise CloudFormationTool::Errors::AppError.new("Cloud-init file #{path} references missing directory #{realdir}") unless File.exist? realdir
         read_dir_files(realdir, directory['target'])
       end.flatten
       "#cloud-config\n" + @initfile.to_yaml
