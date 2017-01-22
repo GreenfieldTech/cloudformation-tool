@@ -1,5 +1,6 @@
 require 'zlib'
 require 'yaml'
+require 'base64'
 
 module CloudFormationTool
   class CloudInit
