@@ -70,7 +70,7 @@ module CloudFormationTool
           resp = awscf.describe_stack_resources  stack_name: @name
           resp.stack_resources
         rescue Aws::CloudFormation::Errors::ValidationError => e
-          raise Errors::AppError, "Failed to get resources: #{e.message}"
+          raise CloudFormationTool::Errors::AppError, "Failed to get resources: #{e.message}"
         end
       end
       
@@ -134,7 +134,7 @@ module CloudFormationTool
           retry
         rescue Seahorse::Client::NetworkingError => e # we get this when there's a timeout
           if (@watch_timeouts += 1) > 5
-            raise AppError, "Too many timeouts!"
+            raise CloudFormationTool::Errors::AppError, "Too many timeouts!"
           else
             retry
           end

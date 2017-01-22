@@ -26,11 +26,11 @@ module CloudFormationTool
       rescue Psych::SyntaxError => e
         e.message =~ /line (\d+) column (\d+)/
         lines = text.split "\n"
-        raise AppError, "Error parsing #{path} at line #{e.line} column #{e.column}:\n" +
+        raise CloudFormationTool::Errors::AppError, "Error parsing #{path} at line #{e.line} column #{e.column}:\n" +
           "#{lines[e.line-1]}\n" +
           "#{(' ' * (e.column - 1 ))}^- #{e.problem} #{e.context}"
       rescue Errno::ENOENT => e
-        raise AppError, "Error reading #{path}: #{e.message}"
+        raise CloudFormationTool::Errors::AppError, "Error reading #{path}: #{e.message}"
       end
     end
     
@@ -110,7 +110,7 @@ module CloudFormationTool
             # warn against duplicate entities, resources or outputs
             (@data[category] ||= {}).keys.each do |key|
               if catdata.has_key? key
-                raise AppError.new("Error compiling #{path} - duplicate '#{category}' item: #{key}")
+                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - duplicate '#{category}' item: #{key}"
               end 
             end
             catdata = fixrefs(catdata, rewrites)
