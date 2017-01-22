@@ -21,6 +21,12 @@ module CloudFormationTool
         $__profile = s
       end
       
+      option [ "-v", "--version" ], :flag, "Print the version and exit" do
+        require 'cloud_formation_tool/version'
+        puts CloudFormationTool::VERSION
+        exit 0
+      end
+      
       subcommand 'list', "List CloudFormation stacks", ListStacks
       subcommand 'parameters', "List template parameters and their default values", Parameters
       subcommand 'compile', "Compile the specified template", Compile
