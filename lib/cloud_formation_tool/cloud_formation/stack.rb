@@ -45,7 +45,7 @@ module CloudFormationTool
       end
       
       def create(template, params = {})
-        tmpl = CloudFormation.parse(template).to_yaml
+        tmpl = CloudFormation.parse(template).to_yaml(params)
         url = upload(make_filename('yaml'), tmpl)
         return update(url, template, params) if exist?
         log "Creating stack '#{name}' from '#{template}' params #{params.inspect}"

@@ -17,6 +17,7 @@ module CloudFormationTool
       @path = "#{@path}.yaml" if !File.exist? @path and File.exist? "#{@path}.yaml"
       @basedir = File.dirname(@path)
       @compiled = false
+      @params = {}
       text = File.read(@path)
       # remove comments because white space seen between comments can seriously psych Psych
       text.gsub!(/^#.*\n/s,'')
@@ -41,7 +42,8 @@ module CloudFormationTool
       @data = load_files(@data)
     end
     
-    def to_yaml
+    def to_yaml(parameters = {})
+      @params = parameters
       compile.to_yaml
     end
     
@@ -122,6 +124,22 @@ module CloudFormationTool
       end
     end
     
+    def resolveVale(value)
+      case value
+      when Hash
+        if value['Ref']
+          @params[value['Ref']] || # parameters are set for this template - we can resolve
+            # no parameters, we are probably in a sub template, just return the ref and hope a parent template
+            # has what it takes to resolve the ref
+            value
+        else
+          raise CloudFormationTool::Errors::AppError, "Value #{value} is not a valid value or reference"
+        end
+      else
+        value;
+      end
+    end
+    
     def load_files(data)
       case data
       when Array
@@ -136,7 +154,7 @@ module CloudFormationTool
             { "Fn::Base64" => { "Fn::Sub" => CloudInit.new("#{@basedir}/#{val["File"]}").compile } }
           elsif (key == "Code") and (val["URL"])
             # Support Lambda Code from arbitrary URLs
-            LambdaCode.new(val["URL"]).to_cloudformation 
+            LambdaCode.new(resolveVal(val["URL"])).to_cloudformation 
           else 
             load_files(val)
           end
