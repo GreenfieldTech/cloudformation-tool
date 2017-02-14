@@ -124,7 +124,7 @@ module CloudFormationTool
       end
     end
     
-    def resolveVale(value)
+    def resolveVal(value)
       case value
       when Hash
         if value['Ref']
