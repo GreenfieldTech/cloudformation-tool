@@ -17,7 +17,7 @@ module CloudFormationTool
       @path = "#{@path}.yaml" if !File.exist? @path and File.exist? "#{@path}.yaml"
       @basedir = File.dirname(@path)
       @compiled = false
-      @params = {}
+      @params = nil
       text = File.read(@path)
       # remove comments because white space seen between comments can seriously psych Psych
       text.gsub!(/^#.*\n/s,'')
@@ -128,10 +128,17 @@ module CloudFormationTool
       case value
       when Hash
         if value['Ref']
-          @params[value['Ref']] || # parameters are set for this template - we can resolve
-            # no parameters, we are probably in a sub template, just return the ref and hope a parent template
-            # has what it takes to resolve the ref
+          if @params.nil?
+            # no parameters, we are probably in a sub template, just return the ref and hope
+            # a parent template has what it takes to resolve the ref
             value
+          else # parameters are set for this template - we can try to resolve
+            res = @params[value['Ref']] || (@data['Parameters']||{})[value['Ref']] 
+            if res.nil?
+              raise CloudFormationTool::Errors::AppError, "Reference #{value['Ref']} can't be resolved"
+            end
+            res
+          end
         else
           raise CloudFormationTool::Errors::AppError, "Value #{value} is not a valid value or reference"
         end
@@ -154,7 +161,13 @@ module CloudFormationTool
             { "Fn::Base64" => { "Fn::Sub" => CloudInit.new("#{@basedir}/#{val["File"]}").compile } }
           elsif (key == "Code") and (val["URL"])
             # Support Lambda Code from arbitrary URLs
-            LambdaCode.new(resolveVal(val["URL"])).to_cloudformation 
+            url = resolveVal(val["URL"])
+            if url.is_a? String # resolving works
+              LambdaCode.new(url).to_cloudformation
+            else # resolving didn't work - we probably don't have parameters
+              # push it upstream and hope a parent template can resolve it
+              val
+            end
           else 
             load_files(val)
           end
