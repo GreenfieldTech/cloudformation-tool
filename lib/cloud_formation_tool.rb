@@ -16,9 +16,9 @@ module CloudFormationTool
     autoloaded.with :CLI 
   end
   
-  def find_profile(dir = nil)
+  def find_profile(dir = nil, default = nil)
     dir ||= Dir.pwd
-    return profile if (dir == "/")
+    return default if (dir == "/")
     begin
       return File.read("#{dir}/.awsprofile").chomp
     rescue Errno::ENOENT
@@ -31,11 +31,11 @@ module CloudFormationTool
   end
   
   def profile
-    $__profile ||= (ENV['AWS_DEFAULT_PROFILE'] || 'default')
+    $__profile ||= find_profile(nil, ENV['AWS_DEFAULT_PROFILE'] || 'default')
   end
   
   def awscreds
-    $__aws_creds ||= Aws::SharedCredentials.new(profile_name: find_profile)
+    $__aws_creds ||= Aws::SharedCredentials.new(profile_name: profile)
   end
   
   def aws_config
