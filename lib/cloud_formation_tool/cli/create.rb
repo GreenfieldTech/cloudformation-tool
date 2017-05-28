@@ -13,7 +13,7 @@ module CloudFormationTool
         "Use multiple times to set multiple parameters.",
         "See 'parameters' command to list the paramaters supported by the tempalte."
         ].join("\n"), multivalued: true
-      option [ "-i", "--import" ], "FILE", "Import parameters from YAML file.", :attribute_name => :param_file
+      option [ "-i", "--import" ], "FILE", "Import parameters from YAML file or HTTP URL.", :attribute_name => :param_file
       option [ "-k", "--import-key" ], "KEY", [
         "When loading parameters from a YAML file, use the specified key to load a named",
         "map from the file, instead of using just the file itself as the parameter map"

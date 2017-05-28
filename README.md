@@ -204,11 +204,12 @@ The following commands are supported:
    their default values.
  - `compile` - Compile a CloudFormation template set (including all caching needed) and
    output the resulting valid CloudFormation template to the console.
- - `create` - Create or update a CloudFormation stack by compiling the specified template 
+ - `create` - Create or update a CloudFormation stack by compiling the specified template
    set and uploading it to CloudFormation. If no stack with the specified name exists, then
    a new stack will be created, otherwise the existing stack will be updated. After sending the
    template to CloudFormation, the tool will immediately start `monitor` mode until the
-   operation has completed successfully or with an error.
+   operation has completed successfully or with an error. Parameters can be specified on the
+   command line - like for the AWS CLI - or loaded from a file or URL.
  - `monitor` - Track and display ongoing events for the named stack.
  - `status` - Check if the names stack exists or not
  - `delete` - Delete the specified stack. After issuing the delete command, the tool will
