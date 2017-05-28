@@ -1,3 +1,6 @@
+require 'uri'
+require 'net/http'
+
 module CloudFormationTool
   module CLI
     class Create < Clamp::Command
@@ -16,9 +19,19 @@ module CloudFormationTool
         "map from the file, instead of using just the file itself as the parameter map"
         ].join("\n"), :attribute_name => :param_key
       
+      def read_param_file(file)
+        param_uri = URI(file)
+        case param_uri.scheme
+        when /^http/
+          Net::HTTP.get(param_uri)
+        else
+          File.read(file)
+        end
+      end
+      
       def get_params
         params = if param_file
-          yaml = YAML.load(File.read(param_file)).to_h
+          yaml = YAML.load(read_param_file param_file).to_h
           if param_key
             raise "Missing parameter section '#{param_key}' in '#{param_file}'!" unless yaml[param_key].is_a? Hash
             yaml[param_key]
