@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cloudformation-tool (0.1.0)
+    cloudformation-tool (0.4.3)
       autoloaded (~> 2)
       aws-sdk (~> 2)
       clamp (~> 1)
@@ -9,16 +9,16 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    autoloaded (2.1.1)
-    aws-sdk (2.6.42)
-      aws-sdk-resources (= 2.6.42)
-    aws-sdk-core (2.6.42)
+    autoloaded (2.2.0)
+    aws-sdk (2.9.25)
+      aws-sdk-resources (= 2.9.25)
+    aws-sdk-core (2.9.25)
       aws-sigv4 (~> 1.0)
       jmespath (~> 1.0)
-    aws-sdk-resources (2.6.42)
-      aws-sdk-core (= 2.6.42)
+    aws-sdk-resources (2.9.25)
+      aws-sdk-core (= 2.9.25)
     aws-sigv4 (1.0.0)
-    clamp (1.1.1)
+    clamp (1.1.2)
     jmespath (1.3.1)
 
 PLATFORMS
@@ -28,4 +28,4 @@ DEPENDENCIES
   cloudformation-tool!
 
 BUNDLED WITH
-   1.11.2
+   1.13.6
