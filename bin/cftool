@@ -6,4 +6,5 @@ begin
   CloudFormationTool::CLI::Main.run
 rescue CloudFormationTool::Errors::AppError => e
   warn e.message
+  exit(1)
 end
