@@ -45,7 +45,7 @@ module CloudFormationTool
     def encode(allow_gzip = true)
       yamlout = compile
       if allow_gzip and yamlout.size > 16384 # max AWS EC2 user data size - try compressing it
-        yamlout = Zlib::Deflate.new(nil, 31).deflate(yamlout, Zlib::FINISH) # 31 is the magic word to have deflate create a gzip compatible header
+        yamlout = gzip_data(yamlout)
       end
       if yamlout.size > 16384 # still to big, we should upload to S3 and create an include file
         url = upload  make_filename('init'),
@@ -58,8 +58,14 @@ module CloudFormationTool
     end
     
     def read_file_content(filepath, spec)
-      spec['encoding'] = 'base64'
-      spec['content'] = Base64.strict_encode64(File.read(filepath))
+      file_data = File.read(filepath)
+      if file_data.length > 4096
+        spec['content'] = Base64.encode64(gzip_data(file_data))
+        spec['encoding'] = 'gz+b64' 
+      else
+        spec['content'] = Base64.encode64(file_data)
+        spec['encoding'] = 'b64'
+      end
       spec
     end
     
@@ -82,6 +88,13 @@ module CloudFormationTool
     
     def to_base64
       Base64.encode64(encode)
+    end
+    
+    private
+    
+    def gzip_data(data)
+      # 31 is the magic word to have deflate create a gzip compatible header
+      Zlib::Deflate.new(nil, 31).deflate(data, Zlib::FINISH)      
     end
     
   end
