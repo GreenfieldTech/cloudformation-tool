@@ -10,7 +10,7 @@ module CloudFormationTool
         log "Downloading Lambda code from #{url}"
         res = fetch(url)
         
-        @s3_url = URI(upload(make_filename(url.split('.').last), res.body, res['content-type']))
+        @s3_url = URI(upload(make_filename(url.split('.').last), res.body, res['content-type'], false))
         log "uploaded Lambda function to #{@s3_url}"
       end
       

@@ -13,7 +13,7 @@ module CloudFormationTool
       end
     end
     
-    def upload(path, content, mime_type = 'text/yaml')
+    def upload(path, content, mime_type = 'text/yaml', gziped = true)
       md5 = Digest::MD5.hexdigest content
       prefix = "#{md5[0]}/#{md5[1..2]}/#{md5}"
       b = Aws::S3::Bucket.new(s3_bucket_name(region), client: awss3(region))
@@ -26,12 +26,15 @@ module CloudFormationTool
       if o.nil?
         # no such luck, we need to actually upload the file
         o = b.object("cf-compiled/#{prefix}/#{path}")
-        o.put acl: 'public-read',
-              body: content,
-              content_disposition: 'attachment',
-              content_encoding: 'gzip',
-              content_type: mime_type,
-              storage_class: 'REDUCED_REDUNDANCY'
+        file_opts = {
+          acl: 'public-read',
+          body: content,
+          content_disposition: 'attachment',
+          content_type: mime_type,
+          storage_class: 'REDUCED_REDUNDANCY'
+        }
+        file_opts.merge!({content_encoding: 'gzip'}) if gziped
+        o.put(file_opts)
       else
         log "re-using cached object"
       end
