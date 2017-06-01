@@ -18,11 +18,11 @@ module CloudFormationTool
       @basedir = File.dirname(@path)
       @compiled = false
       @params = nil
-      text = File.read(@path)
-      # remove comments because white space seen between comments can seriously psych Psych
-      text.gsub!(/^#.*\n/s,'')
-      text = fixShorthand(text)
       begin
+        text = File.read(@path)
+        # remove comments because white space seen between comments can seriously psych Psych
+        text.gsub!(/^#.*\n/s,'')
+        text = fixShorthand(text)
         @data = YAML.load(text).to_h
       rescue Psych::SyntaxError => e
         e.message =~ /line (\d+) column (\d+)/
