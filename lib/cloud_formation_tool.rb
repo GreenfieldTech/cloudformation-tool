@@ -31,7 +31,7 @@ module CloudFormationTool
   end
   
   def profile
-    $__profile ||= find_profile(nil, ENV['AWS_DEFAULT_PROFILE'] || 'default')
+    $__profile ||= find_profile(nil, ENV['AWS_PROFILE'] || ENV['AWS_DEFAULT_PROFILE'] || 'default')
   end
   
   def awscreds

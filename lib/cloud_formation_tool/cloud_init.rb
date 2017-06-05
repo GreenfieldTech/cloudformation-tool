@@ -51,7 +51,7 @@ module CloudFormationTool
       end
       if yamlout.size > 16384 # still to big, we should upload to S3 and create an include file
         url = upload  make_filename('init'),
-                      yamlout, 'text/cloud-config', usegzip
+                      yamlout, mime_type: 'text/cloud-config', gzip: usegzip
         log "Wrote cloud config to #{url}"
         [ "#include", url ].join "\n"  
       else
