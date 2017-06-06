@@ -4,7 +4,7 @@ require 'cloud_formation_tool'
 
 begin
   CloudFormationTool::CLI::Main.run
-rescue CloudFormationTool::Errors::AppError => e
+rescue CloudFormationTool::Errors::BaseError => e
   warn e.message
-  exit(1)
+  exit 1
 end

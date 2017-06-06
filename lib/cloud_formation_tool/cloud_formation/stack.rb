@@ -49,20 +49,24 @@ module CloudFormationTool
         url = upload(make_filename('yaml'), tmpl, gzip: false)
         return update(url, template, params) if exist?
         log "Creating stack '#{name}' from '#{template}' params #{params.inspect}"
-        resp = awscf.create_stack({
-          stack_name: @name,
-          template_url: url,
-          capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
-          on_failure: "DO_NOTHING", ##"ROLLBACK",
-          parameters: params.collect do |k,v|
-            {
-              parameter_key: k.to_s,
-              parameter_value: v.to_s,
-              use_previous_value: false,
-            }
-          end
-        })
-        resp.stack_id
+        begin
+          resp = awscf.create_stack({
+            stack_name: @name,
+            template_url: url,
+            capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
+            on_failure: "DO_NOTHING", ##"ROLLBACK",
+            parameters: params.collect do |k,v|
+              {
+                parameter_key: k.to_s,
+                parameter_value: v.to_s,
+                use_previous_value: false,
+              }
+            end
+          })
+          resp.stack_id
+        rescue Aws::CloudFormation::Errors::ValidationError => e
+          raise CloudFormationTool::Errors::ValidationError, "Stack validation error: #{e.message}"
+        end
       end
       
       def resources
