@@ -35,6 +35,7 @@ module CloudFormationTool
       subcommand 'status', "Check the current status of a stack", Status
       subcommand 'delete', "Delete an existing stack", Delete
       subcommand 'servers', 'List stack resources', Servers
+      subcommand 'output', 'Retrieve output values from the stack', Output
     end
   end
 end

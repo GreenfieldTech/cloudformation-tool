@@ -45,8 +45,8 @@ module CloudFormationTool
       end
       
       def create(template, params = {})
-        tmpl = CloudFormation.parse(template).to_yaml(params)
-        url = upload(make_filename('yaml'), tmpl, gzip: false)
+        @template = CloudFormation.parse(template).to_yaml(params)
+        url = upload(make_filename('yaml'), @template, gzip: false)
         return update(url, template, params) if exist?
         log "Creating stack '#{name}' from '#{template}' params #{params.inspect}"
         begin
@@ -63,9 +63,29 @@ module CloudFormationTool
               }
             end
           })
-          resp.stack_id
+          @stack_id = resp.stack_id
         rescue Aws::CloudFormation::Errors::ValidationError => e
           raise CloudFormationTool::Errors::ValidationError, "Stack validation error: #{e.message}"
+        end
+      end
+      
+      def stack_id
+        @stack_id ||= awscf.describe_stacks(stack_name: @name).stacks.first.stack_id
+      end
+      
+      def output
+        begin
+          key_width = 0
+          resp = awscf.list_exports
+          resp.exports.select do |exp|
+            exp.exporting_stack_id == stack_id
+          end.each do |exp|
+            key_width = [ key_width, exp.name.length ].max
+          end.collect do |exp|
+            "%-#{key_width}s: %s" % [ exp.name, exp.value ]
+          end
+        rescue Aws::CloudFormation::Errors::ValidationError => e
+          raise CloudFormationTool::Errors::AppError, "Failed to get resources: #{e.message}"
         end
       end
       
