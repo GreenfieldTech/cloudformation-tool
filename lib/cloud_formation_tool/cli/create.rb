@@ -56,6 +56,7 @@ module CloudFormationTool
         start = Time.now
         log "Created " + st.create(file, get_params).to_s
         st.monitor(start)
+        puts st.output
       end
       
     end
