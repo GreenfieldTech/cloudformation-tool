@@ -125,7 +125,7 @@ user-data block, it will first be compressed using gzip and if it is still too l
 be uploaded to S3 and the user-data block will be set with a cloud-init download reference to
 the S3 object.
 
-##### Enhanced write_files
+##### Enhanced `write_files`
 
 The ("Cloud Config data" format supports deploying files)[http://cloudinit.readthedocs.io/en/latest/topics/examples.html#writing-out-arbitrary-files]
 into the instance using the `write_files` module. This normally requires the file content
@@ -137,7 +137,23 @@ are binary, or just too large).
 To use an external file in `write_files` instead of specifying the file content using the
 `content` field, use a `file` field to specify the relative path to the file to be loaded.
 
+##### `write_directories`
+
+In the case that you want to deploy multiple files to the same directory, instead of
+listing each and every file as a `write_files` entries (which can get tedious after
+a while, even with the `file` extension), `cftool` offers another cloud-init extension
+as a category named `write_directories`. 
+
+The `write_directories` section is a list where each entry specifies a local
+directory that would be deployed (with all files it includes, recursively - so make
+sure it only includes files you want to deploy) to a target directory on the deployed
+server. For each entry specify a `source` attribute that points to a local directory
+relative to the location of the cloud-init file, and a `target` attribute set to an
+absolute URL to where to deploy the source directory.  
+
 #### Example:
+
+`cloud-formation.yaml`:
 
 ```
   LaunchConfigurationForServer:
@@ -152,6 +168,21 @@ To use an external file in `write_files` instead of specifying the file content 
         - Ref: SecurityGroupExample
       UserData:
         File: config.init 
+```
+
+`config.init`:
+
+```
+#cloud-config
+
+write_files:
+ - path: /etc/default/my-app
+   permissions: '0755'
+   file: my-app.config
+
+write_directory:
+ - source: my-app-data
+   target: /usr/share/my-app
 ```
 
 ### Loading Lambda code
