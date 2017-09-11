@@ -29,7 +29,7 @@ module CloudFormationTool
       
       def update(url, filepath, params = {})
         log "Updating existing stack '#{name}' from '#{filepath}' params #{params.inspect}"
-        check do
+        valid_check do
           resp = awscf.update_stack({
             stack_name: @name,
             template_url: url,
@@ -51,7 +51,7 @@ module CloudFormationTool
         url = upload(make_filename('yaml'), @template, gzip: false)
         return update(url, template, params) if exist?
         log "Creating stack '#{name}' from '#{template}' params #{params.inspect}"
-        check do
+        valid_check do
           resp = awscf.create_stack({
             stack_name: @name,
             template_url: url,
@@ -170,16 +170,16 @@ module CloudFormationTool
           end
         end
       end
-    end
-    
-    private
-    
-    def check
-      begin
-        yield
-      rescue Aws::CloudFormation::Errors::ValidationError => e
-        raise CloudFormationTool::Errors::ValidationError, "Stack validation error: #{e.message}"
-      end  
+      
+      private
+      
+      def valid_check
+        begin
+          yield
+        rescue Aws::CloudFormation::Errors::ValidationError => e
+          raise CloudFormationTool::Errors::ValidationError, "Stack validation error: #{e.message}"
+        end  
+      end
     end
 
   end
