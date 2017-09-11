@@ -119,7 +119,7 @@ you should expect that the template will fail to create the server.
 #### User data file parsing
 
 The reference file will be loaded and parsed as a ("Cloud Config data" file)[http://cloudinit.readthedocs.io/en/latest/topics/format.html#cloud-config-data]
-with the special `write_files` enhancement (see below). The result is then checked that it
+with the special `write_files` and `write_directories` enhancement (see below). The result is then checked that it
 does not exceed the user-data size limitation. If the file is bigger than can fit in the AWS
 user-data block, it will first be compressed using gzip and if it is still too large, it will
 be uploaded to S3 and the user-data block will be set with a cloud-init download reference to

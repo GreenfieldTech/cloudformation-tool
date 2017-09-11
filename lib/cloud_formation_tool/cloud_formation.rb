@@ -158,7 +158,7 @@ module CloudFormationTool
             CloudInit.new("#{@basedir}/#{val["File"]}").to_base64
           elsif (key == "UserData") and (val["FileTemplate"]) 
             # Support LaunchConfiguration UserData from file with substitutions
-            { "Fn::Base64" => { "Fn::Sub" => CloudInit.new("#{@basedir}/#{val["File"]}").compile } }
+            { "Fn::Base64" => { "Fn::Sub" => CloudInit.new("#{@basedir}/#{val["FileTemplate"]}").compile } }
           elsif (key == "Code") and (val["URL"])
             # Support Lambda Code from arbitrary URLs
             url = resolveVal(val["URL"])
