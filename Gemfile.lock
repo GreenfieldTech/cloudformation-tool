@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cloudformation-tool (0.6.4)
+    cloudformation-tool (0.6.5)
       autoloaded (~> 2)
       aws-sdk (>= 2)
       clamp (~> 1)
