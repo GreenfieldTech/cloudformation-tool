@@ -163,9 +163,16 @@ module CloudFormationTool
             # Support Lambda Code from arbitrary URLs
             url = resolveVal(val["URL"])
             if url.is_a? String # resolving works
-              LambdaCode.new(url).to_cloudformation
+              LambdaCode.new(url: url).to_cloudformation
             else # resolving didn't work - we probably don't have parameters
               # push it upstream and hope a parent template can resolve it
+              val
+            end
+          elsif (key == "Code") and (val["PATH"])
+            path = resolveVal(val["PATH"])
+            if path.is_a? String # resolving works
+              LambdaCode.new(path: "#{@basedir}/#{path}").to_cloudformation
+            else # resolving didn't work - we probably don't have parameters
               val
             end
           else 
