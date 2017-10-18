@@ -168,8 +168,8 @@ module CloudFormationTool
               # push it upstream and hope a parent template can resolve it
               val
             end
-          elsif (key == "Code") and (val["PATH"])
-            path = resolveVal(val["PATH"])
+          elsif (key == "Code") and (val["Path"])
+            path = resolveVal(val["Path"])
             if path.is_a? String # resolving works
               LambdaCode.new(path: "#{@basedir}/#{path}").to_cloudformation
             else # resolving didn't work - we probably don't have parameters
