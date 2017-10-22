@@ -8,7 +8,7 @@ module CloudFormationTool
       include Storable
       
       def initialize(url: nil, path: nil)
-        log "Downloading Lambda code from #{url}"
+        log "Downloading Lambda code from #{url}#{path}"
         case url
           when nil
             @s3_url = if File.directory?(path)
