@@ -1,4 +1,5 @@
 require 'net/http'
+require 'zip'
 
 module CloudFormationTool
   class CloudFormation
@@ -6,15 +7,40 @@ module CloudFormationTool
     class LambdaCode
       include Storable
       
-      def initialize(url)
-        log "Downloading Lambda code from #{url}"
-        res = fetch(url)
-        
-        @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
+      def initialize(url: nil, path: nil)
+        log "Downloading Lambda code from #{url}#{path}"
+        case url
+          when nil
+            @s3_url = if File.directory?(path)
+                        URI(upload(make_filename(path.split('/').last), fetch_from_folder(path), mime_type: 'application/zip',  gzip: false))
+                      else
+                        URI(upload(make_filename(path.split('/').last), File.open(path, "rb").read, gzip: false))
+                      end
+          else
+            res = fetch_from_url(url)
+            @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
+          end
         log "uploaded Lambda function to #{@s3_url}"
       end
       
-      def fetch(uri_str, limit = 10)
+      def fetch_from_folder(path_str)
+        begin
+          temp_file = Tempfile.new("#{path_str.split('/').last}.zip")
+          Zip::ZipOutputStream.open(temp_file) { |zos| }
+          Zip::ZipFile.open(temp_file.path, Zip::ZipFile::CREATE) do |zipfile|
+            Dir[File.join(path_str, '*')].each do |file|
+              zipfile.add(file.sub("#{path_str}/", ''), file)
+            end
+          end
+          zip_data = File.read(temp_file.path)
+        ensure
+          temp_file.close
+          temp_file.unlink
+        end
+        zip_data
+      end
+      
+      def fetch_from_url(uri_str, limit = 10)
         raise ArgumentError, 'too many HTTP redirects' if limit == 0
         response = Net::HTTP.get_response(URI(uri_str))
         case response
