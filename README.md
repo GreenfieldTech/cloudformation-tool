@@ -188,11 +188,12 @@ write_directory:
 ### Loading Lambda code
 
 When specifying the `Code` property of a `AWS::Lambda::Function` resource, instead of
-specifying the S3 bucket and object key, the field `URL` may be used to specify an HTTP URL
-from which the code is to be uploaded to AWS Lambda. The tool will download the code file from
-the specified URL, upload it to S3 and specify the correct S3 location for CloudFormation.
-
-In the future we plan to add support for specifying `File` to upload from a local file.
+specifying the S3 bucket and object key, either of the following fields may be used:
+  - The field `URL` may be used to specify an HTTP URL	from which the code is to be uploaded to AWS Lambda. The tool 
+    will download the code file from the specified URL, upload it to S3 and specify the correct S3 location for 
+    CloudFormation.
+  - The field `Path` may be used to specify a local file or directory containing the code to be uploaded. 
+    If the path specifies a directory, it will be compressed as a Zip file. 
 
 #### Example:
 
