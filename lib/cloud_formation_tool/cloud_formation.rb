@@ -92,7 +92,7 @@ module CloudFormationTool
           
           case category
           when "Parameters"
-            @data[category].each do |name, param|
+            (@data[category]||={}).each do |name, param|
               if catdata.has_key? name
                 next if param['Default'] == catdata[name]['Default']
                  
