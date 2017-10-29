@@ -133,7 +133,7 @@ module CloudFormationTool
             # a parent template has what it takes to resolve the ref
             value
           else # parameters are set for this template - we can try to resolve
-            res = @params[value['Ref']] || (@data['Parameters']||{})[value['Ref']] 
+            res = @params[value['Ref']] || ((@data['Parameters']||{})[value['Ref']] || {})['Default']
             if res.nil?
               raise CloudFormationTool::Errors::AppError, "Reference #{value['Ref']} can't be resolved"
             end
@@ -162,6 +162,7 @@ module CloudFormationTool
           elsif (key == "Code") and (val["URL"])
             # Support Lambda Code from arbitrary URLs
             url = resolveVal(val["URL"])
+            log "Resolving lambda code URL: #{url}"
             if url.is_a? String # resolving works
               LambdaCode.new(url: url).to_cloudformation
             else # resolving didn't work - we probably don't have parameters
@@ -175,7 +176,7 @@ module CloudFormationTool
             else # resolving didn't work - we probably don't have parameters
               val
             end
-          else 
+          else
             load_files(val)
           end
           dict
