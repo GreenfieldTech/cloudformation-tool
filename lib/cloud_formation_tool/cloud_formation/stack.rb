@@ -101,6 +101,14 @@ module CloudFormationTool
       def asgroups
         resources.select do |res|
           res.resource_type == 'AWS::AutoScaling::AutoScalingGroup'
+        end.collect do |res|
+          res.extend(CloudFormationTool)
+          res.instance_eval do
+            def group
+              Aws::AutoScaling::AutoScalingGroup.new(self.physical_resource_id, client: awsas).reload
+            end
+          end
+          res
         end
       end
       
