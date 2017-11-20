@@ -56,7 +56,7 @@ module CloudFormationTool
         when Net::HTTPRedirection then
           location = response['location']
           log "redirected to #{location}"
-          fetch_from_url(location, limit - 1)
+          fetch_from_url_real(location, limit - 1)
         else
           raise CloudFormationTool::Errors::AppError, "Error downloading #{url}: #{response.value}"
         end
