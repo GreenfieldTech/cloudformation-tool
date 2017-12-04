@@ -1,4 +1,5 @@
 require 'set'
+require 'aws-sdk-ec2'
 
 module CloudFormationTool
   module CLI

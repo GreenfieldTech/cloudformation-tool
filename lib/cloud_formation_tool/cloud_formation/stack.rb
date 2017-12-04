@@ -1,3 +1,6 @@
+require 'aws-sdk-cloudformation'
+require 'aws-sdk-autoscaling'
+
 module CloudFormationTool
   class CloudFormation
     

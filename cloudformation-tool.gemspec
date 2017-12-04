@@ -18,7 +18,7 @@ Gem::Specification.new do |s|
   s.require_paths = %w( lib )
 
   s.add_dependency 'clamp', '~> 1'
-  s.add_dependency 'aws-sdk', '>= 2'
+  s.add_dependency 'aws-sdk', '>= 3'
   s.add_dependency 'autoloaded', '~> 2'
   s.add_dependency 'zip', '~> 2'
 end

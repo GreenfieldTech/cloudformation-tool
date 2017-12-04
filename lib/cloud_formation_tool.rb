@@ -1,6 +1,6 @@
 require 'logger'
 require 'autoloaded'
-require 'aws-sdk'
+
 
 def log(message = nil, &block)
   ($__logger ||= Logger.new(STDERR)).info(if message.nil?
@@ -35,6 +35,7 @@ module CloudFormationTool
   end
   
   def awscreds
+    require 'aws-sdk-core'
     $__aws_creds ||= Aws::SharedCredentials.new(profile_name: profile)
   end
   
@@ -47,19 +48,23 @@ module CloudFormationTool
   end
   
   def awsec2
+    require 'aws-sdk-ec2'
     $__aws_ec2 ||= Aws::EC2::Client.new aws_config
   end
   
   def awss3(s3reg = nil)
+    require 'aws-sdk-s3'
     s3reg ||= region
     ($__aws_s3 ||= {})[region] ||= Aws::S3::Client.new aws_config.merge(region: s3reg)
   end
   
   def awscf
+    require 'aws-sdk-cloudformation'
     $__aws_cf ||= Aws::CloudFormation::Client.new aws_config
   end
   
   def awsas
+    require 'aws-sdk-autoscaling'
     $__aws_as ||= Aws::AutoScaling::Client.new aws_config
   end
   
