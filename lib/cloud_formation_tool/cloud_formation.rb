@@ -39,7 +39,8 @@ module CloudFormationTool
       return @data if @compiled
       @compiled = true
       embed_includes
-      @data = load_files(@data)
+      parseResources
+      @data
     end
     
     def to_yaml(parameters = {})
