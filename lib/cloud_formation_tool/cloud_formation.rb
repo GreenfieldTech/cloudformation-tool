@@ -172,7 +172,7 @@ module CloudFormationTool
           elsif (key == "Code") and (val["Path"])
             path = resolveVal(val["Path"])
             if path.is_a? String # resolving works
-              LambdaCode.new(path: "#{@basedir}/#{path}").to_cloudformation
+              LambdaCode.new(path: if path.start_with? "/" then path else "#{@basedir}/#{path}" end).to_cloudformation
             else # resolving didn't work - we probably don't have parameters
               val
             end

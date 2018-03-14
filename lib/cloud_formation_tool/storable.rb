@@ -1,4 +1,5 @@
 require 'digest'
+require 'aws-sdk-s3'
 
 module CloudFormationTool
   module Storable
