@@ -36,6 +36,7 @@ module CloudFormationTool
       subcommand 'delete', "Delete an existing stack", Delete
       subcommand 'servers', 'List stack resources', Servers
       subcommand 'recycle', 'Recycle servers in an auto scaling group', Recycle
+      subcommand 'scale', 'Set the number of desired servesr in an auto scaling group', Scale
       subcommand 'output', 'Retrieve output values from the stack', Output
     end
   end
