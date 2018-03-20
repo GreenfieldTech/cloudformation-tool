@@ -1,7 +1,6 @@
 language: ruby
 rvm:
  - ruby-head
-script: "bundle exec gem build cloudformation-tool.gemspec"
 deploy:
  - provider: rubygems
    api_key:
@@ -10,7 +9,7 @@ deploy:
    api_key:
      secure: DVPHH706DPMtf5gpa7Np1WCKkgrEWnXfPKlivk5zHJ4LtdVjwG91qrsE5Q+yGVUWo0emkqLLILIYp69Hy716Fgb42UYEJdJj1kbaQeHZIyoDo0Sw45iOMcP5sgta/eV5VvxPzl7Ai41VyssvC12wRITCqoYh8pQMwNv+bBkMoPEUJ11kxjS6gUFbYgDs7WPw8IPH3nKs8U+3kPc/cVMgVrFkXo1k9fJBGkvIe2s25htXWKWMVedCYEAkeYtW0HRR4yfWvMBx/rYmbbU6Ns31uKkF3CQ0Ua2KtPH8PdCAVdbYKoRi9hJmCznBjSQZHb7Nfg6H64uPmzGzewxjgd8SypMe5Sjp6ES4SGef0r2ZhMG3BbSH8lbSYzxPKJgZ0nKEwpkDcbs+dJdI79agTSb2mssA8F92toNBYUDz7qRdsZqQrBqVhUt8oYVFfADiK+EbDOshconk+EkFgXvns414saFiUKDeUrp3DC5pWKvxMzbDdKAxWSQ0KE7UGhiao00ACR+nFdUA3Lhja99ZqDC+YOKwSM+ZRtDQ0kzZLKLj3r/6bELBaDMcXlpTD9HszzsX6nDHmfOI8j98g8to0o1HumbPFNf6WIX7E8SD3wBKSZ21YFzZwElIWFsRDupGQ39XDAXIyaz2jf9XIVxxqRf/Rc+OJ7/lQ/L7A8dduEk+9X8=
    file_glob: true
-   file: cloudformation-tool-*.gem
+   file: pkg/cloudformation-tool-*.gem
    on:
      repo: GreenfieldTech/cloudformation-tool
      branch: develop
