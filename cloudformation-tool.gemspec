@@ -20,6 +20,8 @@ Gem::Specification.new do |s|
   s.add_dependency 'clamp', '~> 1'
   s.add_dependency 'aws-sdk-cloudformation', '>= 1'
   s.add_dependency 'aws-sdk-s3', '>= 1'
+  s.add_dependency 'aws-sdk-ec2', '>= 1'
+  s.add_dependency 'aws-sdk-autoscaling', '>=1'
   s.add_dependency 'autoloaded', '~> 2'
   s.add_dependency 'zip', '~> 2'
 end
