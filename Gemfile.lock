@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cloudformation-tool (0.9.0)
+    cloudformation-tool (0.9.0.1)
       autoloaded (~> 2)
       aws-sdk-autoscaling (>= 1)
       aws-sdk-cloudformation (>= 1)
@@ -15,7 +15,6 @@ GEM
   remote: https://rubygems.org/
   specs:
     autoloaded (2.2.1)
-    aws-partitions (1.70.0)
     aws-partitions (1.73.0)
     aws-sdk-autoscaling (1.5.0)
       aws-sdk-core (~> 3)
@@ -23,7 +22,6 @@ GEM
     aws-sdk-cloudformation (1.3.0)
       aws-sdk-core (~> 3)
       aws-sigv4 (~> 1.0)
-    aws-sdk-core (3.17.0)
     aws-sdk-core (3.17.1)
       aws-partitions (~> 1.0)
       aws-sigv4 (~> 1.0)
@@ -41,7 +39,7 @@ GEM
     aws-sigv4 (1.0.2)
     clamp (1.2.1)
     jmespath (1.3.1)
-    rake (12.3.0)
+    rake (12.3.1)
     zip (2.0.2)
 
 PLATFORMS
