@@ -50,7 +50,7 @@ module CloudFormationTool
     def fixShorthand(text)
       text.gsub(/(?:(\s*)([^![:space:]]+))?(\s+)!(\w+)/) do |match|
         case $4
-        when *%w(Base64 FindInMap GetAtt GetAZs ImportValue Join Select Sub
+        when *%w(Base64 FindInMap GetAtt GetAZs ImportValue Join Select Sub Split
           And Equals If Not Or)
           ($2.nil? ? "" : "#{$1}#{$2}\n#{$1} ") + "#{$3}\"Fn::#{$4}\":"
         when 'Ref'
