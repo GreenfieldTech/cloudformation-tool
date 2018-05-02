@@ -40,14 +40,14 @@ module CloudFormationTool
         zip_data
       end
       
-    def fetch_from_url(uri_str)
-      $__fetch_cache ||= Hash.new do |h, url|
-        h[url] = fetch_from_url_real(url)
+      def fetch_from_url(uri_str)
+        $__fetch_cache ||= Hash.new do |h, url|
+          h[url] = fetch_from_url_real(url)
+        end
+        $__fetch_cache[uri_str]
       end
-      $__fetch_cache[uri_str]
-    end
     
-    def fetch_from_url_real(uri_str, limit = 10)
+      def fetch_from_url_real(uri_str, limit = 10)
         raise ArgumentError, 'too many HTTP redirects' if limit == 0
         response = Net::HTTP.get_response(URI(uri_str))
         case response
