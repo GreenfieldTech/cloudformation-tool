@@ -14,6 +14,10 @@ module CloudFormationTool
       end
     end
     
+    def cached_object(md5)
+      Aws::S3::Bucket.new(s3_bucket_name(region), client: awss3(region)).objects(prefix: "cf-compiled/#{md5[0]}/#{md5[1..2]}/#{md5}/").first
+    end
+    
     def upload(path, content, mime_type: 'text/yaml', gzip: true)
       md5 = Digest::MD5.hexdigest content
       prefix = "#{md5[0]}/#{md5[1..2]}/#{md5}"
@@ -23,7 +27,7 @@ module CloudFormationTool
       # do a local copy to the requested path) because this way cloudformation can see
       # that the updated template is exactly the same as the old one and will not force
       # an unneeded update.
-      o = b.objects(prefix: "cf-compiled/#{prefix}/").first
+      o = cached_object(md5)
       if o.nil?
         # no such luck, we need to actually upload the file
         o = b.object("cf-compiled/#{prefix}/#{path}")
