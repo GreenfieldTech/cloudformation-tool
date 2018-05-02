@@ -11,11 +11,7 @@ module CloudFormationTool
         log "Downloading Lambda code from #{url}#{path}"
         case url
           when nil
-            @s3_url = if File.directory?(path)
-                        URI(upload(make_filename(path.split('/').last), fetch_from_folder(path), mime_type: 'application/zip',  gzip: false))
-                      else
-                        URI(upload(make_filename(path.split('/').last), File.open(path, "rb").read, gzip: false))
-                      end
+            @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
           else
             res = fetch_from_url(url)
             @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
@@ -23,21 +19,24 @@ module CloudFormationTool
         log "uploaded Lambda function to #{@s3_url}"
       end
       
-      def fetch_from_folder(path_str)
+      def zip_path(path)
+        temp_file = Tempfile.new
+        temp_path = temp_file.path + '.zip'
         begin
-          temp_file = Tempfile.new("#{path_str.split('/').last}.zip")
-          Zip::ZipOutputStream.open(temp_file) { |zos| }
-          Zip::ZipFile.open(temp_file.path, Zip::ZipFile::CREATE) do |zipfile|
-            Dir[File.join(path_str, '*')].each do |file|
-              zipfile.add(file.sub("#{path_str}/", ''), file)
+          Zip::ZipFile.open(temp_path, true) do |zipfile|
+            if File.directory?(path)
+              Dir[File.join(path, '**','*')].each do |file|
+                zipfile.add(file.sub("#{path}/", ''), file)
+              end
+            else
+                zipfile.add(File.basename(path), path)
             end
           end
-          zip_data = File.read(temp_file.path)
+          File.read(temp_path)
         ensure
-          temp_file.close
-          temp_file.unlink
+          temp_file.close!
+          File.unlink temp_path
         end
-        zip_data
       end
       
       def fetch_from_url(uri_str)
