@@ -143,7 +143,7 @@ module CloudFormationTool
           raise CloudFormationTool::Errors::AppError, "Value #{value} is not a valid value or reference"
         end
       else
-        value;
+        value
       end
     end
     
