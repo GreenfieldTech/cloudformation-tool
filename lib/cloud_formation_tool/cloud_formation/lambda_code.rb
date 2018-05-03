@@ -7,47 +7,92 @@ module CloudFormationTool
     class LambdaCode
       include Storable
       
-      def initialize(url: nil, path: nil)
-        log "Downloading Lambda code from #{url}#{path}"
-        case url
-          when nil
-            @s3_url = if File.directory?(path)
-                        URI(upload(make_filename(path.split('/').last), fetch_from_folder(path), mime_type: 'application/zip',  gzip: false))
-                      else
-                        URI(upload(make_filename(path.split('/').last), File.open(path, "rb").read, gzip: false))
-                      end
-          else
+      def initialize(code, tpl)
+        @data = code
+        @data['Url'] = @data.delete 'URL' if @data.key? 'URL' # normalize to CF convention if seeing old key
+        if @data.key? 'Url'
+          log "Trying Lambda code from #{@data['Url']}"
+          @data['Url'] = url = tpl.resolveVal(@data['Url'])
+          return unless url.is_a? String
+          log "Downloading Lambda code from #{url}"
+          unless already_in_cache(url)
             res = fetch_from_url(url)
             @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
+            log "uploaded Lambda function to #{@s3_url}"
           end
-        log "uploaded Lambda function to #{@s3_url}"
+        elsif @data.key? 'Path'
+          @data['Path'] = path = tpl.resolveVal(@data['Path'])
+          return unless path.is_a? String
+          log "Reading Lambda code from #{path}"
+          path = if path.start_with? "/" then path else "#{tpl.basedir}/#{path}" end
+          if File.directory?(path)
+            @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
+            log "uploaded Lambda function to #{@s3_url}"
+          else # Convert files to ZipFile
+            @data.delete 'Path'
+            @data['ZipFile'] = File.read(path)
+          end
+        end
       end
       
-      def fetch_from_folder(path_str)
+      def zip_path(path)
+        temp_file = Tempfile.new
+        temp_path = temp_file.path + '.zip'
         begin
-          temp_file = Tempfile.new("#{path_str.split('/').last}.zip")
-          Zip::ZipOutputStream.open(temp_file) { |zos| }
-          Zip::ZipFile.open(temp_file.path, Zip::ZipFile::CREATE) do |zipfile|
-            Dir[File.join(path_str, '*')].each do |file|
-              zipfile.add(file.sub("#{path_str}/", ''), file)
+          Zip::ZipFile.open(temp_path, true) do |zipfile|
+            Dir[File.join(path, '**','*')].each do |file|
+              zipfile.add(file.sub("#{path}/", ''), file)
             end
           end
-          zip_data = File.read(temp_file.path)
+          File.read(temp_path)
         ensure
-          temp_file.close
-          temp_file.unlink
+          temp_file.close!
+          File.unlink temp_path
         end
-        zip_data
       end
       
-    def fetch_from_url(uri_str)
-      $__fetch_cache ||= Hash.new do |h, url|
-        h[url] = fetch_from_url_real(url)
+      def already_in_cache(uri_str, limit = 10)
+        raise ArgumentError, 'too many HTTP redirects' if limit == 0
+        url = URI(uri_str)
+        begin
+          Net::HTTP.start(url.host, url.port) do |http|
+            request = Net::HTTP::Get.new(url)
+            http.request(request) do |response|
+              # handle redirects like Github likes to do
+              case response
+                when Net::HTTPSuccess then
+                  check_cached(response['ETag'])
+                when Net::HTTPRedirection then
+                  location = response['location']
+                  log "redirected to #{location}"
+                  already_in_cache(location, limit - 1)
+                else
+                  raise ArgumentError, "Error getting response: #{response}"
+              end
+            end
+          end
+        rescue EOFError
+        end
+        !@s3_url.nil?
       end
-      $__fetch_cache[uri_str]
-    end
+      
+      def check_cached(etag)
+        etag.gsub!(/"/,'') unless etag.nil?
+        o = cached_object(etag)
+        unless o.nil?
+          log 'reusing cached object'
+          @s3_url = o.public_url
+        end
+      end
+      
+      def fetch_from_url(uri_str)
+        $__fetch_cache ||= Hash.new do |h, url|
+          h[url] = fetch_from_url_real(url)
+        end
+        $__fetch_cache[uri_str]
+      end
     
-    def fetch_from_url_real(uri_str, limit = 10)
+      def fetch_from_url_real(uri_str, limit = 10)
         raise ArgumentError, 'too many HTTP redirects' if limit == 0
         response = Net::HTTP.get_response(URI(uri_str))
         case response
@@ -63,10 +108,14 @@ module CloudFormationTool
       end
       
       def to_cloudformation
-        {
-          'S3Bucket' => @s3_url.hostname.split('.').first,
-          'S3Key' => @s3_url.path[1..-1]
-        }
+        if @s3_url.nil?
+          @data
+        else
+          {
+            'S3Bucket' => @s3_url.hostname.split('.').first,
+            'S3Key' => @s3_url.path[1..-1]
+          }
+        end
       end
     end
 

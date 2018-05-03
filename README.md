@@ -192,8 +192,10 @@ specifying the S3 bucket and object key, either of the following fields may be u
   - The field `URL` may be used to specify an HTTP URL	from which the code is to be uploaded to AWS Lambda. The tool 
     will download the code file from the specified URL, upload it to S3 and specify the correct S3 location for 
     CloudFormation.
-  - The field `Path` may be used to specify a local file or directory containing the code to be uploaded. 
-    If the path specifies a directory, it will be compressed as a Zip file. 
+  - The field `Path` may be used to specify a local file or directory containing the code to be uploaded.
+    If the path specifies a directory, it will be compressed and uploaded to S3 as a Zip file. If the path is a
+    single file, it will be converted to a `ZipFile`, allowing implicit use of the CloudFormation `cfn-response` module
+    and the AWS SDK, but the file is also subject to all `ZipFile` restrictions - such as limited to 4KB size.
 
 #### Example:
 
