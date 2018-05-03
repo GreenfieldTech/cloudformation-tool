@@ -10,6 +10,8 @@ module CloudFormationTool
       CloudFormation.new(path)
     end
     
+    attr_reader :basedir
+    
     def initialize(path)
       log "Loading #{path}"
       @path = path
@@ -35,9 +37,8 @@ module CloudFormationTool
       end
     end
     
-    def compile
-      return @data if @compiled
-      @compiled = true
+    def compile(parameters = nil)
+      @params = parameters unless parameters.nil?
       embed_includes
       @data = load_files(@data)
     end
@@ -127,7 +128,7 @@ module CloudFormationTool
     def resolveVal(value)
       case value
       when Hash
-        if value['Ref']
+        if value.key? 'Ref'
           if @params.nil?
             # no parameters, we are probably in a sub template, just return the ref and hope
             # a parent template has what it takes to resolve the ref
@@ -147,37 +148,33 @@ module CloudFormationTool
       end
     end
     
-    def load_files(data)
+    def load_files(data, restype = nil)
       case data
       when Array
-        data.collect { |data| load_files(data) }
+        data.collect { |data| load_files(data, restype) }
       when Hash
+        # remember the current resource type
+        restype = data['Type'] if restype.nil? and data.key?('Type')
         data.inject({}) do |dict, (key, val)|
-          dict[key] = if (key == "UserData") and (val["File"]) 
-            # Support LaunchConfiguration UserData from file
-            CloudInit.new("#{@basedir}/#{val["File"]}").to_base64
-          elsif (key == "UserData") and (val["FileTemplate"]) 
-            # Support LaunchConfiguration UserData from file with substitutions
-            { "Fn::Base64" => { "Fn::Sub" => CloudInit.new("#{@basedir}/#{val["FileTemplate"]}").compile } }
-          elsif (key == "Code") and (val["URL"])
-            # Support Lambda Code from arbitrary URLs
-            url = resolveVal(val["URL"])
-            log "Resolving lambda code URL: #{url}"
-            if url.is_a? String # resolving works
-              LambdaCode.new(url: url).to_cloudformation
-            else # resolving didn't work - we probably don't have parameters
-              # push it upstream and hope a parent template can resolve it
-              val
-            end
-          elsif (key == "Code") and (val["Path"])
-            path = resolveVal(val["Path"])
-            if path.is_a? String # resolving works
-              LambdaCode.new(path: if path.start_with? "/" then path else "#{@basedir}/#{path}" end).to_cloudformation
-            else # resolving didn't work - we probably don't have parameters
-              val
-            end
-          else
-            load_files(val)
+          dict[key] = case restype
+            when 'AWS::AutoScaling::LaunchConfiguration'
+              if (key == "UserData") and (val["File"]) 
+                # Support LaunchConfiguration UserData from file
+                CloudInit.new("#{@basedir}/#{val["File"]}").to_base64
+              elsif (key == "UserData") and (val["FileTemplate"]) 
+                # Support LaunchConfiguration UserData from file with substitutions
+                { "Fn::Base64" => { "Fn::Sub" => CloudInit.new("#{@basedir}/#{val["FileTemplate"]}").compile } }
+              else
+                load_files(val, restype)
+              end
+            when 'AWS::Lambda::Function'
+              if key == 'Code'
+                LambdaCode.new(val, self).to_cloudformation
+              else
+                load_files(val, restype)
+              end
+            else
+              load_files(val, restype)
           end
           dict
         end

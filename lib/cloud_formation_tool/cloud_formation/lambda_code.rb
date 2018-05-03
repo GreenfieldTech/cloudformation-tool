@@ -7,17 +7,32 @@ module CloudFormationTool
     class LambdaCode
       include Storable
       
-      def initialize(url: nil, path: nil)
-        log "Downloading Lambda code from #{url}#{path}"
-        if url.nil?
-          @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
-        else 
+      def initialize(code, tpl)
+        @data = code
+        @data['Url'] = @data.delete 'URL' if @data.key? 'URL' # normalize to CF convention if seeing old key
+        if @data.key? 'Url'
+          log "Trying Lambda code from #{@data['Url']}"
+          @data['Url'] = url = tpl.resolveVal(@data['Url'])
+          return unless url.is_a? String
+          log "Downloading Lambda code from #{url}"
           unless already_in_cache(url)
             res = fetch_from_url(url)
             @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
+            log "uploaded Lambda function to #{@s3_url}"
+          end
+        elsif @data.key? 'Path'
+          @data['Path'] = path = tpl.resolveVal(@data['Path'])
+          return unless path.is_a? String
+          log "Reading Lambda code from #{path}"
+          path = if path.start_with? "/" then path else "#{tpl.basedir}/#{path}" end
+          if File.directory?(path)
+            @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
+            log "uploaded Lambda function to #{@s3_url}"
+          else # Convert files to ZipFile
+            @data.delete 'Path'
+            @data['ZipFile'] = File.read(path)
           end
         end
-        log "uploaded Lambda function to #{@s3_url}"
       end
       
       def zip_path(path)
@@ -25,12 +40,8 @@ module CloudFormationTool
         temp_path = temp_file.path + '.zip'
         begin
           Zip::ZipFile.open(temp_path, true) do |zipfile|
-            if File.directory?(path)
-              Dir[File.join(path, '**','*')].each do |file|
-                zipfile.add(file.sub("#{path}/", ''), file)
-              end
-            else
-                zipfile.add(File.basename(path), path)
+            Dir[File.join(path, '**','*')].each do |file|
+              zipfile.add(file.sub("#{path}/", ''), file)
             end
           end
           File.read(temp_path)
@@ -97,10 +108,14 @@ module CloudFormationTool
       end
       
       def to_cloudformation
-        {
-          'S3Bucket' => @s3_url.hostname.split('.').first,
-          'S3Key' => @s3_url.path[1..-1]
-        }
+        if @s3_url.nil?
+          @data
+        else
+          {
+            'S3Bucket' => @s3_url.hostname.split('.').first,
+            'S3Key' => @s3_url.path[1..-1]
+          }
+        end
       end
     end
 
