@@ -14,7 +14,7 @@ module CloudFormationTool
         else
           tpl = CloudFormation.parse(file)
           params = get_params
-          data = tpl.compile;
+          data = tpl.compile(params);
           data['Parameters'].each do |name,param|
             param['Default'] = params[name] if params.has_key? name
           end
