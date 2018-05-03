@@ -1,6 +1,8 @@
 language: ruby
 rvm:
  - ruby-head
+before_install:
+ - gem update --system
 deploy:
  - provider: rubygems
    api_key:
