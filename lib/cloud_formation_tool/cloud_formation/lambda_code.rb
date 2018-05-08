@@ -15,7 +15,9 @@ module CloudFormationTool
           @data['Url'] = url = tpl.resolveVal(@data['Url'])
           return unless url.is_a? String
           log "Downloading Lambda code from #{url}"
-          unless already_in_cache(url)
+          if already_in_cache(url)
+            log "Reusing remote cached object instead of downloading"
+          else
             res = fetch_from_url(url)
             @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
             log "uploaded Lambda function to #{@s3_url}"
@@ -51,27 +53,35 @@ module CloudFormationTool
         end
       end
       
-      def already_in_cache(uri_str, limit = 10)
-        raise ArgumentError, 'too many HTTP redirects' if limit == 0
+      def already_in_cache(uri_str)
+        limit = 10
         url = URI(uri_str)
-        begin
-          Net::HTTP.start(url.host, url.port) do |http|
-            request = Net::HTTP::Get.new(url)
-            http.request(request) do |response|
-              # handle redirects like Github likes to do
-              case response
-                when Net::HTTPSuccess then
-                  check_cached(response['ETag'])
-                when Net::HTTPRedirection then
-                  location = response['location']
-                  log "redirected to #{location}"
-                  already_in_cache(location, limit - 1)
-                else
-                  raise ArgumentError, "Error getting response: #{response}"
+        until url.nil?
+          begin
+            raise ArgumentError, 'too many HTTP redirects' if limit == 0
+            Net::HTTP.start(url.host, url.port, use_ssl: true) do |http|
+              request = Net::HTTP::Get.new(url)
+              http.request(request) do |response|
+                # handle redirects like Github likes to do
+                case response
+                  when Net::HTTPSuccess then
+                    url = nil
+                    http.finish if check_cached(response['ETag'])
+                  when Net::HTTPRedirection then
+                    location = response['location']
+                    log "Cache check redirected to #{location}"
+                    limit = limit - 1
+                    response.body
+                    url = URI(location)
+                  else
+                    log "arg err"
+                    raise ArgumentError, "Error getting response: #{response}"
+                end
               end
             end
+          rescue IOError => e
+            retry unless url.nil?
           end
-        rescue EOFError
         end
         !@s3_url.nil?
       end
@@ -79,9 +89,11 @@ module CloudFormationTool
       def check_cached(etag)
         etag.gsub!(/"/,'') unless etag.nil?
         o = cached_object(etag)
-        unless o.nil?
-          log 'reusing cached object'
-          @s3_url = o.public_url
+        if o.nil?
+          false
+        else
+          @s3_url = URI(o.public_url)
+          true
         end
       end
       
