@@ -38,19 +38,12 @@ module CloudFormationTool
       end
       
       def zip_path(path)
-        temp_file = Tempfile.new
-        temp_path = temp_file.path + '.zip'
-        begin
-          Zip::ZipFile.open(temp_path, true) do |zipfile|
-            Dir[File.join(path, '**','*')].each do |file|
-              zipfile.add(file.sub("#{path}/", ''), file)
-            end
+        Zip::File.add_buffer do |zipfile|
+          Dir[File.join(path, '**','*')].each do |file|
+            name = file.sub("#{path}/", '')
+            zipfile.add(name, file)
           end
-          File.read(temp_path)
-        ensure
-          temp_file.close!
-          File.unlink temp_path
-        end
+        end.read
       end
       
       def already_in_cache(uri_str)
