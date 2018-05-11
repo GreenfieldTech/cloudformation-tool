@@ -4,6 +4,12 @@ require 'cloud_formation_tool'
 
 begin
   CloudFormationTool::CLI::Main.run
+rescue SocketError => e
+  warn "Networking error: #{e.message}"
+  exit 1
+rescue Seahorse::Client::NetworkingError => e
+  warn "Networking error: #{e.message}"
+  exit 1
 rescue CloudFormationTool::Errors::BaseError => e
   warn e.message
   exit 1
