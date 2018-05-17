@@ -38,12 +38,14 @@ module CloudFormationTool
       end
       
       def zip_path(path)
-        Zip::File.add_buffer do |zipfile|
-          Dir[File.join(path, '**','*')].each do |file|
-            name = file.sub("#{path}/", '')
-            zipfile.add(name, file)
+        Zip::OutputStream.write_buffer do |zf|
+          rdir path do |ent|
+            #log "Deflating #{ent}"
+            filepath = File.join(path,ent)
+            zf.put_next_entry ::Zip::Entry.new(nil, ent, nil, nil, nil, nil, nil, nil, ::Zip::DOSTime.at(File.mtime(filepath).to_i))
+            zf.write File.read(filepath) 
           end
-        end.read
+        end.string
       end
       
       def already_in_cache(uri_str)
@@ -122,6 +124,27 @@ module CloudFormationTool
           }
         end
       end
+      
+      def rdir path, prefix = '', &block
+        ents = []
+        (Dir.entries(path) - %w(. ..)).collect do |ent|
+          diskpath = File.join(path,ent)
+          localpath = prefix.length>0 ? File.join(prefix,ent) : ent
+          if block_given?
+            if File.directory? diskpath
+              rdir diskpath, localpath, &block
+            else
+              yield localpath
+            end
+          end
+          if File.directory? diskpath
+            rdir diskpath, localpath
+          else
+            ent
+          end
+        end.flatten
+      end
+      
     end
 
   end
