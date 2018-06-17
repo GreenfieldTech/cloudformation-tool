@@ -6,6 +6,14 @@ module CloudFormationTool
   module CLI
     class Main < Clamp::Command
       
+      logger.formatter = proc { |severity, datetime, progname, msg|
+        if Logger::Severity.const_get(severity) > Logger::Severity::INFO
+          "#{severity}: "
+        else
+          ""
+        end + msg + "\n"
+      }
+      
       class CFToolHelper
         include CloudFormationTool
       end
@@ -23,6 +31,7 @@ module CloudFormationTool
       
       option [ "-d", "--debug" ], :flag, "Enable debug logging" do
         logger.level = Logger::Severity::DEBUG
+        logger.formatter = logger.default_formatter
       end
       
       option [ "-q", "--quiet" ], :flag, "Enable debug logging" do
