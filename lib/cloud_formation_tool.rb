@@ -1,9 +1,36 @@
 require 'logger'
 require 'autoloaded'
 
+def logger
+  ($__logger ||= Logger.new(STDERR))
+end
 
 def log(message = nil, &block)
-  ($__logger ||= Logger.new(STDERR)).info(if message.nil?
+  logger.info(if message.nil?
+    yield
+  else
+    message
+  end)
+end
+
+def debug(message = nul, &block)
+  logger.debug(if message.nil?
+    yield
+  else
+    message
+  end)
+end
+
+def warn(message = nul, &block)
+  logger.warn(if message.nil?
+    yield
+  else
+    message
+  end)
+end
+
+def error(message = nul, &block)
+  logger.error(if message.nil?
     yield
   else
     message
@@ -78,7 +105,7 @@ module CloudFormationTool
     # otherwise try to create one
     if bucket.nil?
       name = cf_bucket_name(region)
-      log("Creating CF template bucket #{name}")
+      log "Creating CF template bucket #{name}"
       awss3.create_bucket({
         acl: "private",
         bucket: name

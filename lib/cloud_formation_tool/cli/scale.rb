@@ -22,16 +22,16 @@ module CloudFormationTool
       end
       
       def execute
-        #log "Starting scale operations"
+        debug "Starting scale operations"
         st = CloudFormation::Stack.new(stack_name)
         st.asgroups.select do |res|
-          #log "Checking group #{res.logical_resource_id}"
+          debug "Checking group #{res.logical_resource_id}"
           asg_name.nil? or (res.logical_resource_id == asg_name)
         end.collect do |res|
-          #log "Scaling #{res.logical_resource_id}"
+          debug "Scaling #{res.logical_resource_id}"
           Thread.new do
             grp = res.group
-            #log "Current capacity: #{grp.desired_capacity}, setting to #{scale}"
+            debug "Current capacity: #{grp.desired_capacity}, setting to #{scale}"
             grp.set_desired_capacity(desired_capacity: scale)
             last_state = nil
             until stable_scale(grp, scale)

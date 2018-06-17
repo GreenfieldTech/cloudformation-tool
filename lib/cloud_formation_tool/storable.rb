@@ -41,7 +41,7 @@ module CloudFormationTool
         file_opts.merge!({content_encoding: 'gzip'}) if gzip
         o.put(file_opts)
       else
-        log "re-using cached object"
+        debug "re-using cached object"
       end
       o.public_url
     end
