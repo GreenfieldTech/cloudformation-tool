@@ -11,12 +11,12 @@ module CloudFormationTool
         @data = code
         @data['Url'] = @data.delete 'URL' if @data.key? 'URL' # normalize to CF convention if seeing old key
         if @data.key? 'Url'
-          log "Trying Lambda code from #{@data['Url']}"
+          debug "Trying Lambda code from #{@data['Url']}"
           @data['Url'] = url = tpl.resolveVal(@data['Url'])
           return unless url.is_a? String
           log "Downloading Lambda code from #{url}"
           if already_in_cache(url)
-            log "Reusing remote cached object instead of downloading"
+            debug "Reusing remote cached object instead of downloading"
           else
             res = fetch_from_url(url)
             @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
@@ -25,7 +25,7 @@ module CloudFormationTool
         elsif @data.key? 'Path'
           @data['Path'] = path = tpl.resolveVal(@data['Path'])
           return unless path.is_a? String
-          log "Reading Lambda code from #{path}"
+          debug "Reading Lambda code from #{path}"
           path = if path.start_with? "/" then path else "#{tpl.basedir}/#{path}" end
           if File.directory?(path)
             @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
@@ -40,7 +40,7 @@ module CloudFormationTool
       def zip_path(path)
         Zip::OutputStream.write_buffer do |zf|
           rdir path do |ent|
-            #log "Deflating #{ent}"
+            debug "Deflating #{ent}"
             filepath = File.join(path,ent)
             zf.put_next_entry ::Zip::Entry.new(nil, ent, nil, nil, nil, nil, nil, nil, ::Zip::DOSTime.at(File.mtime(filepath).to_i))
             zf.write File.read(filepath) 
@@ -64,12 +64,12 @@ module CloudFormationTool
                     http.finish if check_cached(response['ETag'])
                   when Net::HTTPRedirection then
                     location = response['location']
-                    log "Cache check redirected to #{location}"
+                    debug "Cache check redirected to #{location}"
                     limit = limit - 1
                     response.body
                     url = URI(location)
                   else
-                    log "arg err"
+                    error "arg err"
                     raise ArgumentError, "Error getting response: #{response}"
                 end
               end
@@ -107,7 +107,7 @@ module CloudFormationTool
           response
         when Net::HTTPRedirection then
           location = response['location']
-          log "redirected to #{location}"
+          debug "redirected to #{location}"
           fetch_from_url_real(location, limit - 1)
         else
           raise CloudFormationTool::Errors::AppError, "Error downloading #{url}: #{response.value}"

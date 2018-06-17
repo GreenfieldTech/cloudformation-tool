@@ -21,6 +21,14 @@ module CloudFormationTool
         $__profile = s
       end
       
+      option [ "-d", "--debug" ], :flag, "Enable debug logging" do
+        logger.level = Logger::Severity::DEBUG
+      end
+      
+      option [ "-q", "--quiet" ], :flag, "Enable debug logging" do
+        logger.level = Logger::Severity::ERROR
+      end
+      
       option [ "-v", "--version" ], :flag, "Print the version and exit" do
         require 'cloud_formation_tool/version'
         puts CloudFormationTool::VERSION
@@ -35,6 +43,7 @@ module CloudFormationTool
       subcommand 'status', "Check the current status of a stack", Status
       subcommand 'delete', "Delete an existing stack", Delete
       subcommand 'servers', 'List stack resources', Servers
+      subcommand 'groups', 'List stack Autoscaling groups', Groups
       subcommand 'recycle', 'Recycle servers in an auto scaling group', Recycle
       subcommand 'scale', 'Set the number of desired servesr in an auto scaling group', Scale
       subcommand 'output', 'Retrieve output values from the stack', Output
