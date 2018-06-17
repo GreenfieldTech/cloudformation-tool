@@ -94,17 +94,20 @@ module CloudFormationTool
       
       def resources
         begin
-          resp = awscf.describe_stack_resources  stack_name: @name
-          resp.stack_resources
+          awscf.list_stack_resources(stack_name: @name).each do |resp|
+            resp.stack_resource_summaries.each { |res| yield res }
+          end
         rescue Aws::CloudFormation::Errors::ValidationError => e
           raise CloudFormationTool::Errors::AppError, "Failed to get resources: #{e.message}"
         end
       end
       
       def asgroups
-        resources.select do |res|
-          res.resource_type == 'AWS::AutoScaling::AutoScalingGroup'
-        end.collect do |res|
+        output = []
+        resources do |res|
+          output << res if res.resource_type == 'AWS::AutoScaling::AutoScalingGroup'
+        end
+        output.collect do |res|
           res.extend(CloudFormationTool)
           res.instance_eval do
             def group
