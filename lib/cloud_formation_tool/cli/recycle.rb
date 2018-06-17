@@ -31,7 +31,7 @@ module CloudFormationTool
               puts "#{grp.name}: Left to recycle - #{torecycle}"
             end
           end
-        end.each(&:join)
+        end.each(&:join).length > 0 or error "No valid Autoscaling groups found named #{asg_name}"
       end
     end
   end

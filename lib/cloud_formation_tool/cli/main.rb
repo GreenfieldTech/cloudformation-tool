@@ -40,7 +40,7 @@ module CloudFormationTool
       
       option [ "-v", "--version" ], :flag, "Print the version and exit" do
         require 'cloud_formation_tool/version'
-        puts CloudFormationTool::VERSION
+        logger.info CloudFormationTool::VERSION
         exit 0
       end
       
