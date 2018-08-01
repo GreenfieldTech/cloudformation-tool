@@ -82,8 +82,10 @@ module CloudFormationTool
       end
       
       def check_cached(etag)
-        etag.gsub!(/"/,'') unless etag.nil?
-        o = cached_object(etag)
+        unless etag.nil?
+          etag.gsub!(/"/,'')
+          o = cached_object(etag)
+        end
         if o.nil?
           false
         else
