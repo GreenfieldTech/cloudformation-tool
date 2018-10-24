@@ -61,7 +61,7 @@ module CloudFormationTool
                 case response
                   when Net::HTTPSuccess then
                     url = nil
-                    http.finish if check_cached(response['ETag'])
+                    break if check_cached(response['ETag']) # dont read the body if its already cached
                   when Net::HTTPRedirection then
                     location = response['location']
                     debug "Cache check redirected to #{location}"
@@ -69,7 +69,6 @@ module CloudFormationTool
                     response.body
                     url = URI(location)
                   else
-                    error "arg err"
                     raise ArgumentError, "Error getting response: #{response}"
                 end
               end

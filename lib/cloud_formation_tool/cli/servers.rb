@@ -27,7 +27,7 @@ module CloudFormationTool
           end
         end
         ts.each(&:join)
-        puts ts.collect { |t| t.value.join "\n" }
+        puts ts.select{ |t| t.value.length > 0 }.collect { |t| t.value.join "\n" }
       end
       
     end
