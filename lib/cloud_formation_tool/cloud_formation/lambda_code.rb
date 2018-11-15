@@ -7,33 +7,62 @@ module CloudFormationTool
     class LambdaCode
       include Storable
       
-      def initialize(code, tpl)
+      def initialize(code, tpl, runtime = nil)
+        @tpl = tpl
+        @zipfile_safe = runtime.to_s.match(%r{^(nodejs|python)}) != nil
         @data = code
         @data['Url'] = @data.delete 'URL' if @data.key? 'URL' # normalize to CF convention if seeing old key
         if @data.key? 'Url'
-          debug "Trying Lambda code from #{@data['Url']}"
-          @data['Url'] = url = tpl.resolveVal(@data['Url'])
-          return unless url.is_a? String
-          log "Downloading Lambda code from #{url}"
-          if already_in_cache(url)
-            debug "Reusing remote cached object instead of downloading"
-          else
-            res = fetch_from_url(url)
-            @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
-            log "uploaded Lambda function to #{@s3_url}"
-          end
+          handl_url
         elsif @data.key? 'Path'
-          @data['Path'] = path = tpl.resolveVal(@data['Path'])
-          return unless path.is_a? String
-          debug "Reading Lambda code from #{path}"
-          path = if path.start_with? "/" then path else "#{tpl.basedir}/#{path}" end
-          if File.directory?(path)
-            @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
-            log "uploaded Lambda function to #{@s3_url}"
-          else # Convert files to ZipFile
-            @data.delete 'Path'
-            @data['ZipFile'] = File.read(path)
+          handle_path
+        end
+      end
+      
+      def handle_url
+        debug "Trying Lambda code from #{@data['Url']}"
+        @data['Url'] = url = @tpl.resolveVal(@data['Url'])
+        return unless url.is_a? String
+        log "Downloading Lambda code from #{url}"
+        if already_in_cache(url)
+          debug "Reusing remote cached object instead of downloading"
+        else
+          res = fetch_from_url(url)
+          @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
+          log "uploaded Lambda function to #{@s3_url}"
+        end
+      end
+      
+      def handle_path
+        @data['Path'] = path = @tpl.resolveVal(@data['Path'])
+        return unless path.is_a? String
+        debug "Reading Lambda code from #{path}"
+        path = if path.start_with? "/" then path else "#{@tpl.basedir}/#{path}" end
+        if File.directory?(path)
+          @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
+          log "uploaded Lambda function to #{@s3_url}"
+        else
+          handle_file path
+        end
+      end
+      
+      def handle_file(path)
+        @data.delete 'Path'
+        contents = File.read(path)
+        if contents.size <= 4096 and @zipfile_safe # Convert files to ZipFile
+          @data['ZipFile'] = contents
+        else # upload and hope for the best
+          ext = path.split('.').last
+          ctype = case ext
+          when 'jar'
+            'application/java-archive'
+          when 'zip'
+            'application/zip'
+          else
+            'application/octet-stream'
           end
+          @s3_url = URI(upload(make_filename(ext), contents, mime_type: ctype, gzip: false))
+          log "uploaded Lambda function to #{@s3_url}"
         end
       end
       

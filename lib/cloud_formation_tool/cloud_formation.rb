@@ -81,6 +81,16 @@ module CloudFormationTool
         return data
       end
     end
+   
+    def embed_includes_future
+      (@data.delete(@data.keys.find{|k| k.start_with? 'Include'}) || []).each do |path|
+        case path
+        when Hash
+        when String
+          embed_included_path path
+        end
+      end
+    end
     
     def embed_includes
       (@data.delete(@data.keys.find{|k| k.start_with? 'Include'}) || []).each do |path|
@@ -169,7 +179,7 @@ module CloudFormationTool
               end
             when 'AWS::Lambda::Function'
               if key == 'Code'
-                LambdaCode.new(val, self).to_cloudformation
+                LambdaCode.new(val, self, data['Runtime']).to_cloudformation
               else
                 load_files(val, restype)
               end
