@@ -13,7 +13,7 @@ module CloudFormationTool
         @data = code
         @data['Url'] = @data.delete 'URL' if @data.key? 'URL' # normalize to CF convention if seeing old key
         if @data.key? 'Url'
-          handl_url
+          handle_url
         elsif @data.key? 'Path'
           handle_path
         end
