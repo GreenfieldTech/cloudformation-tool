@@ -55,6 +55,7 @@ module CloudFormationTool
       subcommand 'groups', 'List stack Autoscaling groups', Groups
       subcommand 'recycle', 'Recycle servers in an auto scaling group', Recycle
       subcommand 'scale', 'Set the number of desired servesr in an auto scaling group', Scale
+      subcommand 'invalidate', 'Invalidate CloudFront caches in the stack', Invalidate
       subcommand 'output', 'Retrieve output values from the stack', Output
     end
   end

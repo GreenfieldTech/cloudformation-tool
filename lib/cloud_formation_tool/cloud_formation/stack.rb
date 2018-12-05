@@ -118,6 +118,16 @@ module CloudFormationTool
         end
       end
       
+      def cdns
+        output = []
+        resources do |res|
+          output << res if res.resource_type == 'AWS::CloudFront::Distribution'
+        end
+        output.collect do |res|
+          res.extend(CloudFrontDistribution)
+        end
+      end
+      
       def see_events
         each { |e| @seenev << e.event_id }
       end
