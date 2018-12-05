@@ -95,6 +95,11 @@ module CloudFormationTool
     $__aws_as ||= Aws::AutoScaling::Client.new aws_config
   end
   
+  def awscdn
+    require 'aws-sdk-cloudfront'
+    $__aws_cdn ||= Aws::CloudFront::Client.new aws_config
+  end
+  
   def s3_bucket_name(region)
     name = nil
     # see if we already have a cf-templates bucket for this region
