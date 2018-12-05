@@ -6,7 +6,6 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Oded Arbel"]
-  s.date = %q{2011-03-10}
   s.email = %q{oded.arbel@greenfieldtech.net}
   s.summary = %q{A pre-compiler tool for CloudFormation YAML templates}
   
