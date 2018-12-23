@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    cloudformation-tool (1.2.1)
+    cloudformation-tool (1.2.2)
       autoloaded (~> 2)
       aws-sdk-autoscaling (>= 1)
       aws-sdk-cloudformation (>= 1)
@@ -17,22 +17,22 @@ GEM
   specs:
     autoloaded (2.2.1)
     aws-eventstream (1.0.1)
-    aws-partitions (1.122.0)
+    aws-partitions (1.127.0)
     aws-sdk-autoscaling (1.13.0)
       aws-sdk-core (~> 3, >= 3.39.0)
       aws-sigv4 (~> 1.0)
-    aws-sdk-cloudformation (1.13.0)
+    aws-sdk-cloudformation (1.14.0)
       aws-sdk-core (~> 3, >= 3.39.0)
       aws-sigv4 (~> 1.0)
     aws-sdk-cloudfront (1.11.0)
       aws-sdk-core (~> 3, >= 3.39.0)
       aws-sigv4 (~> 1.0)
-    aws-sdk-core (3.43.0)
+    aws-sdk-core (3.44.1)
       aws-eventstream (~> 1.0)
       aws-partitions (~> 1.0)
       aws-sigv4 (~> 1.0)
       jmespath (~> 1.0)
-    aws-sdk-ec2 (1.62.0)
+    aws-sdk-ec2 (1.65.0)
       aws-sdk-core (~> 3, >= 3.39.0)
       aws-sigv4 (~> 1.0)
     aws-sdk-kms (1.13.0)
@@ -45,7 +45,7 @@ GEM
     aws-sigv4 (1.0.3)
     clamp (1.3.0)
     jmespath (1.4.0)
-    rake (12.3.1)
+    rake (12.3.2)
     rubyzip (1.2.2)
 
 PLATFORMS
