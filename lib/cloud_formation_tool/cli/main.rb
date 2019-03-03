@@ -31,7 +31,7 @@ module CloudFormationTool
       
       option [ "-d", "--debug" ], :flag, "Enable debug logging" do
         logger.level = Logger::Severity::DEBUG
-        logger.formatter = logger.default_formatter
+        logger.formatter = nil
       end
       
       option [ "-q", "--quiet" ], :flag, "Enable debug logging" do

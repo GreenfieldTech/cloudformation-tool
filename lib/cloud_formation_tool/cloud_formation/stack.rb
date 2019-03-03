@@ -15,6 +15,7 @@ module CloudFormationTool
         @name = name
         @seenev = Set.new
         @watch_timeouts = 0
+        @nested_stacks = Hash[]
       end
       
       def delete
@@ -133,6 +134,7 @@ module CloudFormationTool
       end
       
       def monitor(start_time = nil)
+        @nested_stacks = Hash[]
         done = false
         begin
           until done
@@ -140,26 +142,65 @@ module CloudFormationTool
               next if @seenev.add?(ev.event_id).nil?
               text = "#{ev.timestamp.strftime "%Y-%m-%d %H:%M:%S"}| " + %w(
                 resource_type:40
-                logical_resource_id:38
+                logical_resource_id:42
                 resource_status
               ).collect { |field|
                 (name,size) = field.split(":")
                 size ||= 1
-                ev.send(name.to_sym).ljust(size.to_i, ' ')
+                (if name == 'logical_resource_id' and ev.stack_name != self.name
+                  logical_nested_stack_name(ev.stack_name) + "|"
+                else
+                  ''
+                end + ev.send(name.to_sym)).ljust(size.to_i, ' ')
               }.join("  ")
               text += " " + ev.resource_status_reason if ev.resource_status =~ /_FAILED/
               if start_time.nil? or start_time < ev.timestamp
                 puts text
               end
-              done = (ev.resource_type == "AWS::CloudFormation::Stack" and ev.resource_status =~ /(_COMPLETE|_FAILED)$/)
+              check_nested_stack(ev)
+              done = is_final_event(ev)
             end
+            sleep 1
           end
         rescue CloudFormationTool::Errors::StackDoesNotExistError => e
           puts "Stack #{name} does not exist"
         end
       end
       
+      def logical_nested_stack_name(phys_name)
+        @nested_stacks[phys_name] || 'unknown'
+      end
+      
+      def nested_stack_name(ev)
+        ev.physical_resource_id.split('/')[1]
+      end
+      
+      def check_nested_stack(ev)
+        return unless ev.resource_type == "AWS::CloudFormation::Stack" and
+          ev.logical_resource_id != self.name # not nested stack
+        return if @nested_stacks.has_key? ev.logical_resource_id # seeing the first or last nested stack event - ignoring
+        @nested_stacks[nested_stack_name(ev)] = ev.logical_resource_id
+      end
+      
+      def is_final_event(ev)
+        ev.resource_type == "AWS::CloudFormation::Stack" and
+        ev.resource_status =~ /(_COMPLETE|_FAILED)$/ and
+        ev.logical_resource_id == self.name
+      end
+      
+      def tracked_stacks
+        [ self.name ] + @nested_stacks.keys.compact
+      end
+      
       def each
+        tracked_stacks.each do |name|
+          events_for(name) do |ev|
+            yield ev
+          end
+        end
+      end
+      
+      def events_for(stack_name)
         token = nil
         sleep(if @_last_poll_time.nil?
           0
@@ -172,7 +213,7 @@ module CloudFormationTool
             end
           end)
         begin
-          resp = awscf.describe_stack_events stack_name: name, next_token: token
+          resp = awscf.describe_stack_events stack_name: stack_name, next_token: token
           @watch_timeouts = 0
           resp.stack_events.each do |ev|
             yield ev
@@ -188,7 +229,11 @@ module CloudFormationTool
           end
         rescue Aws::CloudFormation::Errors::ValidationError => e
           if e.message =~ /does not exist/
-            raise CloudFormationTool::Errors::StackDoesNotExistError, "Stack does not exist"
+            if stack_name == self.name
+              raise CloudFormationTool::Errors::StackDoesNotExistError, "Stack does not exist"
+            end
+            # ignore "does not exist" errors on nested stacks - we may try to poll them before
+            # they actually exist. We'll just try later
           else
             raise e
           end

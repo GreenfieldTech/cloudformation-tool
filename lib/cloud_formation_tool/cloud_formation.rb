@@ -183,6 +183,12 @@ module CloudFormationTool
               else
                 load_files(val, restype)
               end
+            when 'AWS::CloudFormation::Stack'
+              if key == 'Properties' and val.key?('Template')
+                NestedStack.new(val, self).to_cloudformation
+              else
+                load_files(val, restype)
+              end
             else
               load_files(val, restype)
           end

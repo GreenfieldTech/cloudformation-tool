@@ -216,6 +216,102 @@ specifying the S3 bucket and object key, either of the following fields may be u
       Role: !GetAtt [ LambdaExecutionRole, Arn ]
 ```
 
+### Nested Stacks Modules
+
+The CloudFormation pre-compiler supports loading local templates as "nested stacks" using the
+CloudFormation `AWS::CloudFormation::Stack` resource type.
+
+Instead of first pre-deploying a template to S3 to be used for a nested stack, use the
+`Template` property (instead of the `TemplateURL` property) to point to a local
+sub-template. The sub-template will be compiled separately and deployed automatically to
+an S3 bucket before deploying the compiled template to CloudFormation.
+
+The `monitor` tool (also used during `create` operation) supports nested stacks by
+automatically detecting nested stack updates in the main stack's event stream and will
+start streaming the nested stack events - this allows the user to more easily locate problems
+with nested stacks.
+
+Currently there's no automatic resolution of references between nested and parent stacks, so
+make sure to set up nested stack parameters for all resources that should be referenced from
+the parent stack.
+
+#### Example
+
+`cloud-formation.yaml`:
+
+```
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "CloudFormation template with nested stacks"
+Parameters:
+  DomainName:
+    Description: "The DNS domain name for the system"
+    Type: String
+    Default: example.com
+  AMI:
+    Description: "The AMI ID for the image to deploy"
+    Type: String
+    Default: ami-af4333cf
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 172.20.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+  SecurityGroupExample:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC 
+      GroupDescription: example security group
+      SecurityGroupIngress:
+        - { IpProtocol: icmp, CidrIp: 0.0.0.0/0, FromPort: -1, ToPort: -1 }
+        - { IpProtocol: tcp, CidrIp: 0.0.0.0/0, FromPort: 22, ToPort: 22 }
+  ServiceStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      Template: service.yaml
+      Parameters:
+        DomainName: !Ref DomainName
+        AMI: !Ref AMI
+        VPC: !Ref VPC
+```
+
+`service.yaml`:
+
+```
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Service nested stack"
+Parameters:
+  DomainName:
+    Description: "The DNS domain name for the system"
+    Type: String
+  AMI:
+    Description: "The AMI ID for the image to deploy"
+    Type: String
+  VPC:
+    Description: "The VPC into which to deploy the service"
+    Type: String
+
+Resources:
+  Subnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [ 0, !GetAZs { Ref: "AWS::Region" } ]
+      CidrBlock: 172.20.0.0/24
+      MapPublicIpOnLaunch: true
+      VpcId: !Ref VPC
+  Ec2Instance: 
+    Type: AWS::EC2::Instance
+    Properties: 
+      ImageId: !Ref AMI
+      KeyName: "secret" 
+      NetworkInterfaces: 
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: !Ref Subnet 
+```
+
 ## Caching
 
 Some resource compilation may require uploading to S3, such as Lambda code or cloud-init setup
