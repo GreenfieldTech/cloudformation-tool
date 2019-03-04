@@ -106,7 +106,12 @@ module CloudFormationTool
       def asgroups
         output = []
         resources do |res|
-          output << res if res.resource_type == 'AWS::AutoScaling::AutoScalingGroup'
+          case res.resource_type
+          when 'AWS::AutoScaling::AutoScalingGroup'
+            output << res
+          when 'AWS::CloudFormation::Stack'
+            output.concat(Stack.new(res.physical_resource_id).asgroups) 
+          end
         end
         output.collect do |res|
           res.extend(CloudFormationTool)
