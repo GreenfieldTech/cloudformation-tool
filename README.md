@@ -344,7 +344,12 @@ The following commands are supported:
  - `status` - Check if the names stack exists or not
  - `delete` - Delete the specified stack. After issuing the delete command, the tool will
    immediately start `monitor` mode until the operation has completed. 
- - `servers` - List EC2 instances created and managed by this stack.
+ - `servers` - List EC2 instances created and managed by this stack, per autoscaling group, including servers in nested stacks.
+ - `groups` - list autoscaling groups managed by the stack, including groups in nested stacks.
+ - `recycle` - recycle servers in an autoscaling group in a stack by scaling the group up and down.
+ - `scale` - set the scale of an autoscaling group managed by a stack to a specific desired value.
+ - `invalidate` - send an invalidation request to a CloudFront distribution managed by a stack.
+ - `output` - retrieve output values from a stack.
 
 Please see the specific help for each command by running `cftool <command> --help` for
 more details and specific options.
@@ -356,3 +361,100 @@ The AWS region to be used can be select by specifying top level option (i.e. bef
 ### Credentials Selection
 
 The tool will use the standard AWS credentials selection process, except when you want to use AWS CLI configured credential profiles, you may select to use a profile other than "default" by specifying the top level option (i.e. before the command name) `-p <profile>`, by providing the standard environment variable `AWS_DEFAULT_PROFILE` or by having a file called `.awsprofile` - whose content is the name of a valid AWS REGION - in a parent directory (at any level up to the root directory).
+
+## Library API
+
+The cloudformatin tool can also be consumed as a library by other applications - for example an application that needs to perform high-level business-logic oriented
+operations for a specific application deployed in a stack, using the cloudformation tool abstraction of CloudFormation templates and stacks.
+
+### Usage as a library
+
+To use the cloudformatin tool as a library, require `cloud_formation_tool`.
+
+### CloudFormation templates
+
+The cloudformation pre-compiler can be used to manipulate pre-compiled templates.
+
+To access the pre-compiler, initialize a `CloudFormationTool::CloudFormation` with the path to the local template resource (either a file or a directory that can be
+parsed by the pre-compiler).
+
+The initial template resource will be loaded but will not be fully parsed - and included elements will not be read - until the `compile` method is called.
+
+The following method calls are available on the `CloudFormation` instance:
+
+#### `compile(parameters = nil)`
+
+Pre-compiles the template, with the provided parameter `Hash`, if provided. Returns a `Hash` repsenting the compiled template.
+
+#### `to_yaml`
+
+Pre-compiles the template and returns a YAML rendering of the CloudFormation template, suitable for deploying to AWS CloudFormation.
+
+#### `each`
+
+Yields a tuple for each defined template parameter, that includes the parameter's name and its default value (if set, `nil` otherwise).
+
+### CloudFormation stacks
+
+The cloudformation tool's abstraction of a CloudFormation stack can be used to manipulate stack resouces, such as autoscaling groups or instances in a stack context.
+
+To access the stack API, initialize a `CloudFormationTool::CloudFormation::Stack` with the name of the stack. You can then access the following methods:
+
+#### `exist?`
+
+Check if a stack exists.
+
+#### `create(template, params = {})`
+
+Create or update a stack by deploying the specified template. The template can be any local file or directory resource that can be parsed by the cloudformation pre-compiler.
+
+#### `delete`
+
+Deletes the stack
+
+#### `stack_id`
+
+Return the AWS CloudFormation stack identifier for the stack, which is the ARN of the stack.
+
+#### `output`
+
+Returns the output values of the stack
+
+#### `resources`
+
+Return a list of resources in the stack and all of its nested stacks
+
+#### `asgroups`
+
+Return a list of autoscaling groups in the stack and all of its nested stacks. The returned values are AWS SDK CloudFormation resources, extended with a set of methods
+to help manage autoscaling groups:
+
+##### `group`
+
+Returns the AWS SDK `Aws::AutoScaling::AutoScalingGroup` object for the autoscaling group.
+
+#### `cdns`
+
+Return a list of CloudFront CDN distributions in the stack and all of its nested stacks. The returnd values are AWS SDK CloudFormation resources, extended with a set of
+methods to help manage CloudFront distributions:
+
+##### `distribution`
+
+Returns the AWS SDK `Aws::CloudFront::Types::Distribution` object for the CloudFront distribution.
+
+##### `domain_names`
+
+Returns the comma delimited list of the distribution aliases domain names
+
+##### `invalidate(path)`
+
+Creates a new invalidation in the CloudFront distribution with the specified path expression
+
+#### `each`
+
+Yields CloudFormation stack events, in the order they were created. Subsequent calls to `each` will not repeat events previously yielded and will only yield additional
+events created since the last call to `each`.
+
+#### `see_event`
+
+Mark all events since the last call to `each` (or from stack creation, if `each` was not previously called) as "seen" so they will not be yielded in future calls to `each`.
