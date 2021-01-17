@@ -23,7 +23,7 @@ module CloudFormationTool
       begin
         text = File.read(@path)
         # remove comments because white space seen between comments can seriously psych Psych
-        text.gsub!(/^#.*\n/s,'')
+        text.gsub!(/^#.*\n/,'')
         text = fixShorthand(text)
         @data = YAML.load(text).to_h
       rescue Psych::SyntaxError => e
@@ -167,7 +167,7 @@ module CloudFormationTool
         restype = data['Type'] if restype.nil? and data.key?('Type')
         data.inject({}) do |dict, (key, val)|
           dict[key] = case restype
-            when 'AWS::AutoScaling::LaunchConfiguration'
+            when 'AWS::AutoScaling::LaunchConfiguration', 'AWS::EC2::LaunchTemplate'
               if (key == "UserData") and (val["File"]) 
                 # Support LaunchConfiguration UserData from file
                 CloudInit.new("#{@basedir}/#{val["File"]}").to_base64
