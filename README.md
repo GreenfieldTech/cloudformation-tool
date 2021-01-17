@@ -103,27 +103,30 @@ multiple sub-templates, this is an error that would cause the tool to abort.
 
 ### Loading user data files
 
-When specifying a user-data block for a `LaunchConfiguration` resource or an `Instance`
-resource, the user-data can be loaded from an external YAML file (only YAML formatted user-data
-is currently supported, sorry) by specifying the `UserData` element as a map with the single
-field `File` that is set with the relative path to the user-data file. The user-data file is
-expected to be a cloud-init configuration file with the default extension `.init`.
+When specifying a user-data block for a `LaunchConfiguration` resource, `Instance`
+resource, or a `LaunchTemplate` resource, the user-data can be loaded from an external
+YAML file (only YAML formatted user-data is currently supported, sorry) by specifying the
+`UserData` element as a map with the single field `File` that is set with the relative
+path to the user-data file. The user-data file is expected to be a cloud-init configuration
+file with the default extension `.init` (but there really aren't any filename requirements).
 
-Alternatively, the field `FileTemplate` can be used under `UserData` to load an external cloud-init configuration file that includes variable place holders for the
-(CloudFormation intrinsic function Sub)[http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html]. The `FileTemplate` mode supports all
-the features described above as well as it performs the parsing detailed below, except
-compression and S3 offloading - as doing so prevents CloudFormation from performing the
-substitution operation. As a result, if the resulting cloud-init file is larger than 16KB
-you should expect that the template will fail to create the server.
+Alternatively, the field `FileTemplate` can be used under `UserData` to load an external
+cloud-init configuration file that includes variable place holders for the
+(CloudFormation intrinsic function Sub)[http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-sub.html].
+The `FileTemplate` mode supports all the features described above as well as it performs
+the parsing detailed below, except compression and S3 offloading - as doing so prevents
+CloudFormation from performing the substitution operation. As a result, if the resulting
+cloud-init file is larger than 16KB you should expect that the template will fail to create
+the stack.
 
 #### User data file parsing
 
 The reference file will be loaded and parsed as a ("Cloud Config data" file)[http://cloudinit.readthedocs.io/en/latest/topics/format.html#cloud-config-data]
-with the special `write_files` and `write_directories` enhancement (see below). The result is then checked that it
-does not exceed the user-data size limitation. If the file is bigger than can fit in the AWS
-user-data block, it will first be compressed using gzip and if it is still too large, it will
-be uploaded to S3 and the user-data block will be set with a cloud-init download reference to
-the S3 object.
+with the special `write_files` and `write_directories` enhancement (see below). 
+The result is then checked that it does not exceed the user-data size limitation.
+If the file is bigger than can fit in the AWS user-data block, it will first be compressed
+using gzip and if it is still too large, it will be uploaded to S3 and the user-data block
+will be set with a cloud-init download reference to the S3 object.
 
 ##### Enhanced `write_files`
 
