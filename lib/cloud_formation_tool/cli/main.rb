@@ -1,6 +1,7 @@
 require 'clamp'
 require 'io/console'
 
+$MAX_USER_DATA_SIZE = 16384
 
 module CloudFormationTool
   module CLI

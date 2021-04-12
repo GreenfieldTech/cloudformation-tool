@@ -45,11 +45,11 @@ module CloudFormationTool
     def encode(allow_gzip = true)
       yamlout = compile
       usegzip = false
-      if allow_gzip and yamlout.size > 16000 # max AWS EC2 user data size - try compressing it
+      if allow_gzip and yamlout.size > $MAX_USER_DATA_SIZE # max AWS EC2 user data size - try compressing it
         yamlout = Zlib::Deflate.new(nil, 31).deflate(yamlout, Zlib::FINISH) # 31 is the magic word to have deflate create a gzip compatible header
         usegzip = true
       end
-      if yamlout.size > 16384 # still to big, we should upload to S3 and create an include file
+      if yamlout.size > $MAX_USER_DATA_SIZE # still to big, we should upload to S3 and create an include file
         url = upload  make_filename('init'),
                       yamlout, mime_type: 'text/cloud-config', gzip: usegzip
         log "Wrote cloud config to #{url}"

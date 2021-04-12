@@ -4,11 +4,16 @@ module CloudFormationTool
     class Compile < Clamp::Command
       include ParamSupport
       
+      option "--user-data-size", "SIZE", "Maximum size of VM user data", default: $MAX_USER_DATA_SIZE do |s|
+        Integer(s)
+      end
+      
       parameter 'FILE', 'Template main file'
       
       add_param_options
       
       def execute
+      	$MAX_USER_DATA_SIZE = user_data_size
         if file.end_with? '.init'
           puts CloudInit.new(file).encode(false) # make sure cloud-init files obey AWS user-data restrictions, but are also printable
         else
