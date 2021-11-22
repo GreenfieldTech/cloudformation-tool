@@ -54,6 +54,7 @@ module CloudFormationTool
       subcommand 'delete', "Delete an existing stack", Delete
       subcommand 'servers', 'List stack resources', Servers
       subcommand 'groups', 'List stack Autoscaling groups', Groups
+      subcommand 'services', 'List stack Fargate services', Services
       subcommand 'recycle', 'Recycle servers in an auto scaling group', Recycle
       subcommand 'scale', 'Set the number of desired servers in an auto scaling group', Scale
       subcommand 'invalidate', 'Invalidate CloudFront caches in the stack', Invalidate
