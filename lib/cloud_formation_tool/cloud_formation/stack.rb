@@ -126,6 +126,14 @@ module CloudFormationTool
         end
       end
       
+      def fargate_services
+        output = []
+        resources do |res|
+          output << res if res.resource_type == 'AWS::ECS::Service'
+        end
+        output
+      end
+      
       def cdns
         output = []
         resources do |res|
