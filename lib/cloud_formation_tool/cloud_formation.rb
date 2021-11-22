@@ -13,6 +13,7 @@ module CloudFormationTool
     attr_reader :basedir
     
     def initialize(path)
+      $MAX_USER_DATA_SIZE = 16384 if $MAX_USER_DATA_SIZE.nil?
       log "Loading #{path}"
       @path = path
       @path = "#{@path}/cloud-formation.yaml" if File.directory? @path
