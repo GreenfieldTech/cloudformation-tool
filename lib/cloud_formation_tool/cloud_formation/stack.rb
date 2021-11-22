@@ -131,7 +131,37 @@ module CloudFormationTool
         resources do |res|
           output << res if res.resource_type == 'AWS::ECS::Service'
         end
-        output
+        output.collect do |res|
+          res.extend(CloudFormationTool)
+          res.instance_eval do
+            def arn
+              physical_resource_id
+            end
+            def cluster_name
+              self.arn.split(/:/).last.split('/')[1]
+            end
+            def service_name
+              self.arn.split(/:/).last.split('/')[2]
+            end
+            def service
+              svc = awsecs.describe_services(cluster: cluster_name, services: [ service_name ], include: [ 'TAGS' ]).services.first
+              svc.instance_eval do
+                def client= ecsclient
+                  @client = ecsclient
+                end
+                def client
+                  @client
+                end
+              end
+              svc.client = awsecs
+              svc
+            end
+            def task_definition
+              awsecs.describe_task_definition(task_definition: service.task_definition).task_definition
+            end
+          end
+          res
+        end
       end
       
       def cdns
