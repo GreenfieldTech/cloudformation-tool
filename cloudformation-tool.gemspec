@@ -21,6 +21,7 @@ Gem::Specification.new do |s|
   s.add_dependency 'aws-sdk-cloudformation', '>= 1'
   s.add_dependency 'aws-sdk-s3', '>= 1'
   s.add_dependency 'aws-sdk-ec2', '>= 1'
+  s.add_dependency 'aws-sdk-ecs', '>= 1'
   s.add_dependency 'aws-sdk-autoscaling', '>=1'
   s.add_dependency 'aws-sdk-cloudfront', '>=1'
   s.add_dependency 'autoloaded', '~> 2'

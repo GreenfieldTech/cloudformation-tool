@@ -95,6 +95,11 @@ module CloudFormationTool
     $__aws_as ||= Aws::AutoScaling::Client.new aws_config
   end
   
+  def awsecs
+    require 'aws-sdk-ecs'
+    $__aws_ecs ||= Aws::ECS::Client.new aws_config
+  end
+  
   def awscdn
     require 'aws-sdk-cloudfront'
     $__aws_cdn ||= Aws::CloudFront::Client.new aws_config
