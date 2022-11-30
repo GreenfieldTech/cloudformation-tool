@@ -32,13 +32,14 @@ module CloudFormationTool
         # no such luck, we need to actually upload the file
         o = b.object("cf-compiled/#{prefix}/#{path}")
         file_opts = {
-          acl: 'public-read',
+          acl: 'bucket-owner-full-control',
           body: content,
           content_disposition: 'attachment',
           content_type: mime_type,
           storage_class: 'REDUCED_REDUNDANCY'
         }
         file_opts.merge!({content_encoding: 'gzip'}) if gzip
+        debug "Uploading S3 object s3://#{b.name}/#{o.key}"
         o.put(file_opts)
       else
         debug "re-using cached object"
