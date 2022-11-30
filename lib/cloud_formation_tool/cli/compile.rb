@@ -19,8 +19,8 @@ module CloudFormationTool
         else
           tpl = CloudFormation.parse(file)
           params = get_params
-          data = tpl.compile(params);
-          data['Parameters'].each do |name,param|
+          data = tpl.compile(params)
+          (data['Parameters'] || []).each do |name,param|
             param['Default'] = params[name] if params.has_key? name
           end
           puts data.to_yaml
