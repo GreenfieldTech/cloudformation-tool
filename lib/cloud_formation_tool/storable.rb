@@ -32,7 +32,7 @@ module CloudFormationTool
         # no such luck, we need to actually upload the file
         o = b.object("cf-compiled/#{prefix}/#{path}")
         file_opts = {
-          acl: 'bucket-owner-full-control',
+          acl: 'public-read',
           body: content,
           content_disposition: 'attachment',
           content_type: mime_type,
