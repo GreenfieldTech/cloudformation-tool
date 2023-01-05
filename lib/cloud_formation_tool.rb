@@ -117,7 +117,7 @@ module CloudFormationTool
       name = cf_bucket_name(region)
       log "Creating CF template bucket #{name}"
       awss3.create_bucket({
-        acl: "private",
+        acl: "public-read",
         bucket: name
       }.merge(if region == 'us-east-1' then {} else { create_bucket_configuration: { location_constraint: region } } end))
       name
