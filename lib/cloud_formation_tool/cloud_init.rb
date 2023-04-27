@@ -12,7 +12,7 @@ module CloudFormationTool
       @path = path
       log "Loading #{path}"
       begin
-        @initfile = YAML.load(File.read(path)).to_h
+        @initfile = YAML.load(File.read(path), filename: @path, permitted_classes: [Date, Symbol]).to_h
       rescue Errno::ENOENT => e
         raise CloudFormationTool::Errors::AppError.new("Error reading #{@path}: " + e.message)
       end

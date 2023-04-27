@@ -26,7 +26,7 @@ module CloudFormationTool
         # remove comments because white space seen between comments can seriously psych Psych
         text.gsub!(/^#.*\n/,'')
         text = fixShorthand(text)
-        @data = YAML.load(text).to_h
+        @data = YAML.load(text, filename: @path, permitted_classes: [Date, Symbol]).to_h
       rescue Psych::SyntaxError => e
         e.message =~ /line (\d+) column (\d+)/
         lines = text.split "\n"
