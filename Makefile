@@ -12,4 +12,7 @@ push: cloudformation-tool-$(VERSION).gem
 clean:
 	rm -f cloudformation-tool-*.gem
 
+version:
+	@echo $(VERSION)
+
 .PHONY: all clean push
