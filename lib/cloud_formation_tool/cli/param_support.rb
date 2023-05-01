@@ -37,7 +37,7 @@ module CloudFormationTool
       
       def get_params
         params = if param_file
-          yaml = YAML.load(read_param_file param_file, filename: param_file, permitted_classes: [Date, Symbol]).to_h
+          yaml = YAML.load(read_param_file(param_file), filename: param_file, permitted_classes: [Date, Symbol]).to_h
           if param_key
             raise "Missing parameter section '#{param_key}' in '#{param_file}'!" unless yaml[param_key].is_a? Hash
             yaml[param_key]
