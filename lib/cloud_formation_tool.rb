@@ -89,7 +89,6 @@ module CloudFormationTool
   end
   
   def aws_config
-    p region
     {
 #      credentials: awscreds,
       profile: profile,
