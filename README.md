@@ -363,7 +363,7 @@ The AWS region to be used can be select by specifying top level option (i.e. bef
 
 ### Credentials Selection
 
-The tool will use the standard AWS credentials selection process, except when you want to use AWS CLI configured credential profiles, you may select to use a profile other than "default" by specifying the top level option (i.e. before the command name) `-p <profile>`, by providing the standard environment variable `AWS_DEFAULT_PROFILE` or by having a file called `.awsprofile` - whose content is the name of a valid AWS REGION - in a parent directory (at any level up to the root directory).
+The tool will use the standard AWS credentials selection process, except when you want to use AWS CLI configured credential profiles, you may select to use a profile other than "default" by specifying the top level option (i.e. before the command name) `-p <profile>`, by providing the standard environment variable `AWS_DEFAULT_PROFILE` or by having a file called `.awsprofile` - whose content is the name of a valid AWS credentials profile - in a parent directory (at any level up to the root directory).
 
 ## Library API
 
