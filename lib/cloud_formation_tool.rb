@@ -57,18 +57,21 @@ module CloudFormationTool
     $__region ||= (ENV['AWS_DEFAULT_REGION'] || 'us-west-1')
   end
   
-  def profile
-    $__profile ||= find_profile(nil, ENV['AWS_PROFILE'] || ENV['AWS_DEFAULT_PROFILE'] || 'default')
+  def profile name = nil
+    $__profile ||= name || find_profile(nil, ENV['AWS_PROFILE'] || ENV['AWS_DEFAULT_PROFILE'] || 'default')
   end
   
   def awscreds
     require 'aws-sdk-core'
-    $__aws_creds ||= Aws::SharedCredentials.new(profile_name: profile)
+    #$__aws_creds ||= Aws::SharedCredentials.new(profile_name: profile)
+    config = Aws::SharedConfig.new(profile_name: profile, config_enabled: true)
+    $__aws_creds ||= config.credentials
   end
   
   def aws_config
     {
-      credentials: awscreds,
+#      credentials: awscreds,
+      profile: profile,
       region: region,
       http_read_timeout: 5
     }
@@ -116,11 +119,12 @@ module CloudFormationTool
     if bucket.nil?
       name = cf_bucket_name(region)
       log "Creating CF template bucket #{name}"
-      awss3.create_bucket({
+      awss3(region).create_bucket({
         acl: "private",
         bucket: name,
         object_ownership: 'BucketOwnerPreferred'
       }.merge(if region == 'us-east-1' then {} else { create_bucket_configuration: { location_constraint: region } } end))
+      awss3(region).delete_public_access_block({bucket: name})
       name
     else
       bucket[:name]

@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   s.require_paths = %w( lib )
 
   s.add_dependency 'rake', '>= 12.3.3'
+  s.add_dependency 'psych', '>= 4.0'
   s.add_dependency 'clamp', '~> 1'
   s.add_dependency 'aws-sdk-cloudformation', '>= 1'
   s.add_dependency 'aws-sdk-s3', '>= 1'
