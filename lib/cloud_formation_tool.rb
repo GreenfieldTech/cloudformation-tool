@@ -1,5 +1,7 @@
 require 'logger'
 require 'autoloaded'
+require 'socket'
+require 'aws-sdk-core'
 
 def logger
   ($__logger ||= Logger.new(STDERR))
@@ -37,6 +39,22 @@ def error(message = nul, &block)
   end)
 end
 
+# Hack AWS SDK to let us find out the Profile's region that it resolved
+module Aws
+  class SharedConfig
+    def profile_region
+      c = (if @parsed_credentials and @parsed_credentials[@profile_name] then
+        @parsed_credentials[@profile_name]
+      elsif @parsed_config and @parsed_config[@profile_name] then
+        @parsed_config[@profile_name]
+      else
+        {}
+      end)
+      c['region'] || c['aws_region'] || c['sso_region'] || nil
+    end
+  end
+end
+
 module CloudFormationTool
   
   Autoloaded.module do |autoloaded|
@@ -54,7 +72,10 @@ module CloudFormationTool
   end
   
   def region
-    $__region ||= (ENV['AWS_DEFAULT_REGION'] || 'us-west-1')
+    $__region ||= ENV['AWS_REGION'] ||
+        Aws::SharedConfig.new(profile_name: profile, config_enabled: true).profile_region ||
+        ENV['AWS_DEFAULT_REGION'] ||
+        'us-east-1'
   end
   
   def profile name = nil
@@ -62,13 +83,13 @@ module CloudFormationTool
   end
   
   def awscreds
-    require 'aws-sdk-core'
     #$__aws_creds ||= Aws::SharedCredentials.new(profile_name: profile)
     config = Aws::SharedConfig.new(profile_name: profile, config_enabled: true)
     $__aws_creds ||= config.credentials
   end
   
   def aws_config
+    p region
     {
 #      credentials: awscreds,
       profile: profile,

@@ -359,11 +359,23 @@ more details and specific options.
 
 ### Region Selection
 
-The AWS region to be used can be select by specifying top level option (i.e. before the command name) `-r <region>`, by providing the standard environment variable `AWS_DEFAULT_REGION` or it will default to `us-west-1`
+The CloudFormation tool must know what region the CloudFormation stack is being deployed into, so it
+can create and appropriately located S3 bucket for template intermediary files (such cloud-init templates).
+
+The AWS region will be chosen according to this order of precedence:
+- Using the top level command line option `--region`
+- Setting the environment variable `AWS_REGION` (to be compatible with the AWS CLI)
+- Setting a default region in the AWS CLI profile, then selecting that profile using the top level command
+  line option `--profile` (this can be done using `aws configure` or by editing the credentials file)
+- Setting the environment variable `AWS_DEFAULT_REGION`
+- If none of these are set, the default AWS region `us-east-1` is assumed
 
 ### Credentials Selection
 
-The tool will use the standard AWS credentials selection process, except when you want to use AWS CLI configured credential profiles, you may select to use a profile other than "default" by specifying the top level option (i.e. before the command name) `-p <profile>`, by providing the standard environment variable `AWS_DEFAULT_PROFILE` or by having a file called `.awsprofile` - whose content is the name of a valid AWS credentials profile - in a parent directory (at any level up to the root directory).
+The tool will use the standard AWS credentials selection process, except that you may want to use AWS CLI configured
+credential profile - you may select to use a profile other than "default" either by using the top level command line
+option `--profile`, by providing the standard environment variable `AWS_DEFAULT_PROFILE`, or by creating a file called
+`.awsprofile` - whose content is the name of a valid AWS credentials profile - in a parent directory (at any level up to the root directory).
 
 ## Library API
 
