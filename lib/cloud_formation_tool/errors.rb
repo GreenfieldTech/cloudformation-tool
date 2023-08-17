@@ -11,5 +11,7 @@ module CloudFormationTool
     
     class StackDoesNotExistError < BaseError; end
     
+    class AuthError < BaseError; end
+    
   end
 end
