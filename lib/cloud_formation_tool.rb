@@ -105,7 +105,11 @@ module CloudFormationTool
   def awss3(s3reg = nil)
     require 'aws-sdk-s3'
     s3reg ||= region
-    ($__aws_s3 ||= {})[region] ||= Aws::S3::Client.new aws_config.merge(region: s3reg)
+    begin
+      ($__aws_s3 ||= {})[region] ||= Aws::S3::Client.new aws_config.merge(region: s3reg)
+    rescue Aws::Errors::InvalidSSOToken => e
+      raise CloudFormationTool::Errors::AuthError, "SSO login failed: #{e.message}"
+    end
   end
   
   def awscf
