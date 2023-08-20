@@ -19,7 +19,11 @@ module CloudFormationTool
       end
       
       def delete
-        awscf.delete_stack  stack_name: @name
+        begin
+          awscf.delete_stack  stack_name: @name
+        rescue Aws::Errors::MissingCredentialsError => e
+          raise CloudFormationTool::Errors::AuthError, e.message
+        end
       end
       
       def exist?
