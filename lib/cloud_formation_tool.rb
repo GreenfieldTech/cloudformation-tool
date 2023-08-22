@@ -135,8 +135,16 @@ module CloudFormationTool
   def s3_bucket_name(region)
     name = nil
     # see if we already have a cf-templates bucket for this region
-    bucket = awss3.list_buckets.buckets.select do |b|
-        b.name =~ /cf-templates-(\w+)-#{region}/
+    bucket = awss3(region).list_buckets.buckets.select do |b|
+      b.name =~ /cf-templates-(\w+)-#{region}/
+    end.select do |b|
+      # S3 started showing us buckets that were deleted, and can't actually be accessible, so filter those
+      begin
+        Aws::S3::Bucket.new(b.name, client: awss3(region)).objects.first
+        true
+      rescue Aws::S3::Errors::NoSuchBucket => e
+        false
+      end
     end.first
     
     # otherwise try to create one
