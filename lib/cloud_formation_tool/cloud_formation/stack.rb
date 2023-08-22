@@ -41,7 +41,7 @@ module CloudFormationTool
           resp = awscf.update_stack({
             stack_name: @name,
             template_url: url,
-            capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
+            capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND),
             parameters: params.collect do |k,v|
               {
                 parameter_key: k.to_s,
@@ -63,7 +63,7 @@ module CloudFormationTool
           resp = awscf.create_stack({
             stack_name: @name,
             template_url: url,
-            capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM),
+            capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND),
             on_failure: "DO_NOTHING", ##"ROLLBACK",
             parameters: params.collect do |k,v|
               {
