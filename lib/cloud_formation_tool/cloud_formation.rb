@@ -121,17 +121,34 @@ module CloudFormationTool
               end
             end
           else
-            # warn against duplicate entities, resources or outputs
-            (@data[category] ||= {}).keys.each do |key|
-              if catdata.has_key? key
-                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - duplicate '#{category}' item: #{key}"
-              end 
+            case catdata
+            when Hash
+              # warn against duplicate entities, resources or outputs
+              (@data[category] ||= {}).keys.each do |key|
+                if catdata.has_key? key
+                  raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - duplicate '#{category}' item: #{key}"
+                end 
+              end
+              catdata = fixrefs(catdata, rewrites)
+              # add included properties
+              @data[category].merge! catdata
+            when Array
+              if @data[category].nil?
+                @data[category] = catdata
+              elsif @data[category].is_a? Array
+                @data[category] += catdata
+              else
+                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - conflicting types for '#{category}'"
+              end
+            else
+              if @data[category].nil?
+                @data[category] = catdata
+              else
+                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - I do not know how to merge non-list non-dictionary '#{category}'!"
+              end
             end
-            catdata = fixrefs(catdata, rewrites)
           end
           
-          # add included properties
-          @data[category].merge! catdata
         end
       end
     end

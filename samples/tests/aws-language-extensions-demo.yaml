@@ -1,0 +1,15 @@
+AWSTemplateFormatVersion: 2010-09-09
+Transform: 'AWS::LanguageExtensions'
+Parameters:
+  QueueList:
+    Type: CommaDelimitedList
+  QueueNameParam:
+    Description: Name for your SQS queue
+    Type: String
+Resources:
+  Queue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Ref QueueNameParam
+      DelaySeconds:
+        'Fn::Length': !Ref QueueList

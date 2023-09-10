@@ -1,0 +1,9 @@
+Transform: 'AWS::LanguageExtensions'
+
+Resources:
+  Queue:
+    Type: 'AWS::SQS::Queue'
+    Properties:
+      QueueName: !Ref QueueNameParam
+      DelaySeconds:
+        'Fn::Length': !Ref QueueList
