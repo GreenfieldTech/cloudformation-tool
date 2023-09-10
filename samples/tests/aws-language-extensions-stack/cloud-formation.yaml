@@ -1,0 +1,10 @@
+AWSTemplateFormatVersion: 2010-09-09
+Parameters:
+  QueueList:
+    Type: CommaDelimitedList
+  QueueNameParam:
+    Description: Name for your SQS queue
+    Type: String
+
+Include:
+  - module
