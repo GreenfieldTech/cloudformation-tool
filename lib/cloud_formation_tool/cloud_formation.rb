@@ -102,54 +102,61 @@ module CloudFormationTool
           # some categories are meta-data that we can ignore from includes
           next if %w(AWSTemplateFormatVersion Description).include? category
           
-          case category
-          when "Parameters"
-            (@data[category]||={}).each do |name, param|
-              if catdata.has_key? name
-                next if param['Default'] == catdata[name]['Default']
-                 
-                if catdata[name].has_key?('Override') and catdata[name]['Override'] == false
-                  catdata.delete(name)
-                else
-                  newname = "#{cfile_key}z#{name}"
-                  log "Rewriting conflicting parameter #{name} (='#{catdata[name]['Default']}') to #{newname}"
-                  catdata[newname] = catdata.delete name
-                  rewrites[name] = newname
-                end
-              else
-                @data[category][name] = param
-              end
+          if category == "Parameters"
+            rewriteParameters catdata, cfile_key, rewrites
+            @data["Parameters"].merge! catdata
+            next
+          end
+          
+          case catdata
+          when Hash
+            # warn against duplicate entities, resources or outputs
+            (@data[category] ||= {}).keys.each do |key|
+              if catdata.has_key? key
+                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - duplicate '#{category}' item: #{key}"
+              end 
+            end
+            catdata = fixrefs(catdata, rewrites)
+            # add included properties
+            @data[category].merge! catdata
+          when Array
+            if @data[category].nil?
+              @data[category] = catdata
+            elsif @data[category].is_a? Array
+              @data[category] += catdata
+            else
+              raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - conflicting types for '#{category}'"
             end
           else
-            case catdata
-            when Hash
-              # warn against duplicate entities, resources or outputs
-              (@data[category] ||= {}).keys.each do |key|
-                if catdata.has_key? key
-                  raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - duplicate '#{category}' item: #{key}"
-                end 
-              end
-              catdata = fixrefs(catdata, rewrites)
-              # add included properties
-              @data[category].merge! catdata
-            when Array
-              if @data[category].nil?
-                @data[category] = catdata
-              elsif @data[category].is_a? Array
-                @data[category] += catdata
-              else
-                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - conflicting types for '#{category}'"
-              end
+            if @data[category].nil?
+              @data[category] = catdata
             else
-              if @data[category].nil?
-                @data[category] = catdata
-              else
-                raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - I do not know how to merge non-list non-dictionary '#{category}'!"
-              end
+              raise CloudFormationTool::Errors::AppError, "Error compiling #{path} - I do not know how to merge non-list non-dictionary '#{category}'!"
             end
           end
           
         end
+      end
+    end
+    
+    def rewriteParameters data, key, rewrites
+      (@data["Parameters"]||={}).each do |name, param|
+        unless data.has_key? name
+          @data["Parameters"][name] = param
+          next
+        end
+        
+        next if param['Default'] == data[name]['Default']
+        
+        if data[name].has_key?('Override') and data[name]['Override'] == false
+          data.delete(name)
+          next
+        end
+        
+        newname = "#{key}z#{name}"
+        log "Rewriting conflicting parameter #{name} (='#{data[name]['Default']}') to #{newname}"
+        data[newname] = data.delete name
+        rewrites[name] = newname
       end
     end
     
