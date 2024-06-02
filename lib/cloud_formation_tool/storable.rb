@@ -15,12 +15,15 @@ module CloudFormationTool
     end
     
     def cached_object(md5)
-      Aws::S3::Bucket.new(s3_bucket_name(region), client: awss3(region)).objects(prefix: "cf-compiled/#{md5[0]}/#{md5[1..2]}/#{md5}/").first
+      Aws::S3::Bucket.new(s3_bucket_name(region), client: awss3(region)).objects(prefix: prefix(md5)).first
+    end
+    
+    def prefix(md5)
+      "cf-compiled/#{md5[0]}/#{md5[1..2]}/#{md5}/"
     end
     
     def upload(path, content, mime_type: 'text/yaml', gzip: true)
       md5 = Digest::MD5.hexdigest content
-      prefix = "#{md5[0]}/#{md5[1..2]}/#{md5}"
       b = Aws::S3::Bucket.new(s3_bucket_name(region), client: awss3(region))
       # return early if we already have a copy of this object stored.
       # if this object was previously uploaded, we use its URLs (and not, for example,
@@ -30,7 +33,7 @@ module CloudFormationTool
       o = cached_object(md5)
       if o.nil?
         # no such luck, we need to actually upload the file
-        o = b.object("cf-compiled/#{prefix}/#{path}")
+        o = b.object(prefix(md5) + path)
         file_opts = {
           acl: 'public-read',
           body: content,
@@ -38,6 +41,11 @@ module CloudFormationTool
           content_type: mime_type,
           storage_class: 'REDUCED_REDUNDANCY'
         }
+        ownctl = b.client.get_bucket_ownership_controls(bucket: b.name).ownership_controls
+        if ownctl.rules.first.object_ownership == 'BucketOwnerEnforced' then
+          # no point in setting ACL
+          file_opts.delete :acl
+        end
         file_opts.merge!({content_encoding: 'gzip'}) if gzip
         debug "Uploading S3 object s3://#{b.name}/#{o.key}"
         o.put(file_opts)
