@@ -41,6 +41,11 @@ module CloudFormationTool
           content_type: mime_type,
           storage_class: 'REDUCED_REDUNDANCY'
         }
+        ownctl = b.client.get_bucket_ownership_controls(bucket: b.name).ownership_controls
+        if ownctl.rules.first.object_ownership == 'BucketOwnerEnforced' then
+          # no point in setting ACL
+          file_opts.delete :acl
+        end
         file_opts.merge!({content_encoding: 'gzip'}) if gzip
         debug "Uploading S3 object s3://#{b.name}/#{o.key}"
         o.put(file_opts)
