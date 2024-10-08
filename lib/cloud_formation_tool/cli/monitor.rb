@@ -16,7 +16,7 @@ module CloudFormationTool
             sleep 1
           end
         rescue CloudFormationTool::Errors::StackDoesNotExistError => e
-          error "Stack #{stack_name} does not exist"
+          _error "Stack #{stack_name} does not exist"
         rescue SystemExit, Interrupt => e
           # CTRL-C out of the loop
           puts "\n"

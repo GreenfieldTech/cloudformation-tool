@@ -9,7 +9,7 @@ module CloudFormationTool
         if CloudFormation::Stack.new(stack_name).exist?
           log "OK"
         else
-          error "Stack #{stack_name} does not exist"
+          _error "Stack #{stack_name} does not exist"
         end
       end
 

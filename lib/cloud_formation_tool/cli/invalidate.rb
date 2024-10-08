@@ -16,7 +16,7 @@ module CloudFormationTool
             inv.wait
             log "Invalidation #{inv.id}: #{inv.status}"
           end
-        end.each(&:join).length > 0 or error "No valid CloudFront distributions found"
+        end.each(&:join).length > 0 or _error "No valid CloudFront distributions found"
       end
     end
   end
