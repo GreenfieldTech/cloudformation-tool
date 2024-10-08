@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.licenses = %q{GPL-2.0}
   s.require_paths = %w( lib )
 
+  s.add_dependency 'base64'
   s.add_dependency 'rake', '>= 12.3.3'
   s.add_dependency 'psych', '>= 4.0'
   s.add_dependency 'clamp', '~> 1'
