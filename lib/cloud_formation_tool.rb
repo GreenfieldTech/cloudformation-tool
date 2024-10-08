@@ -15,7 +15,7 @@ def log(message = nil, &block)
   end)
 end
 
-def debug(message = nil, &block)
+def _debug(message = nil, &block)
   logger.debug(if message.nil?
     yield
   else
@@ -23,7 +23,7 @@ def debug(message = nil, &block)
   end)
 end
 
-def warn(message = nil, &block)
+def _warn(message = nil, &block)
   logger.warn(if message.nil?
     yield
   else
@@ -31,7 +31,7 @@ def warn(message = nil, &block)
   end)
 end
 
-def error(message = nil, &block)
+def _error(message = nil, &block)
   logger.error(if message.nil?
     yield
   else

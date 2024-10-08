@@ -20,12 +20,12 @@ module CloudFormationTool
       end
       
       def handle_url
-        debug "Trying Lambda code from #{@data['Url']}"
+        _debug "Trying Lambda code from #{@data['Url']}"
         @data['Url'] = url = @tpl.resolveVal(@data['Url'])
         return unless url.is_a? String
         log "Downloading Lambda code from #{url}"
         if already_in_cache(url)
-          debug "Reusing remote cached object instead of downloading"
+          _debug "Reusing remote cached object instead of downloading"
         else
           res = fetch_from_url(url)
           @s3_url = URI(upload(make_filename(url.split('.').last), res.body, mime_type: res['content-type'], gzip: false))
@@ -36,7 +36,7 @@ module CloudFormationTool
       def handle_path
         @data['Path'] = path = @tpl.resolveVal(@data['Path'])
         return unless path.is_a? String
-        debug "Reading Lambda code from #{path}"
+        _debug "Reading Lambda code from #{path}"
         path = if path.start_with? "/" then path else "#{@tpl.basedir}/#{path}" end
         if File.directory?(path)
           @s3_url = URI(upload(make_filename('zip'), zip_path(path), mime_type: 'application/zip', gzip: false))
@@ -69,7 +69,7 @@ module CloudFormationTool
       def zip_path(path)
         Zip::OutputStream.write_buffer do |zf|
           rdir path do |ent|
-            debug "Deflating #{ent}"
+            _debug "Deflating #{ent}"
             filepath = File.join(path,ent)
             zf.put_next_entry ::Zip::Entry.new(nil, ent, nil, nil, nil, nil, nil, nil, ::Zip::DOSTime.at(File.mtime(filepath).to_i))
             zf.write File.read(filepath) 
@@ -93,7 +93,7 @@ module CloudFormationTool
                     break if check_cached(response['ETag']) # dont read the body if its already cached
                   when Net::HTTPRedirection then
                     location = response['location']
-                    debug "Cache check redirected to #{location}"
+                    _debug "Cache check redirected to #{location}"
                     limit = limit - 1
                     response.body
                     url = URI(location)

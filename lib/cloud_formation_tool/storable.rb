@@ -47,10 +47,10 @@ module CloudFormationTool
           file_opts.delete :acl
         end
         file_opts.merge!({content_encoding: 'gzip'}) if gzip
-        debug "Uploading S3 object s3://#{b.name}/#{o.key}"
+        _debug "Uploading S3 object s3://#{b.name}/#{o.key}"
         o.put(file_opts)
       else
-        debug "re-using cached object"
+        _debug "re-using cached object"
       end
       o.public_url
     end
