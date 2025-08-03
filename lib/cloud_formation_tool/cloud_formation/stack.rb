@@ -16,6 +16,15 @@ module CloudFormationTool
         @seenev = Set.new
         @watch_timeouts = 0
         @nested_stacks = Hash[]
+        @region = nil
+      end
+      
+      def region=(region)
+        $__region = @region = region
+      end
+      
+      def region
+        @region
       end
       
       def delete
