@@ -27,5 +27,5 @@ Gem::Specification.new do |s|
   s.add_dependency 'aws-sdk-autoscaling', '>=1'
   s.add_dependency 'aws-sdk-cloudfront', '>=1'
   s.add_dependency 'autoloaded', '~> 2'
-  s.add_dependency 'rubyzip'
+  s.add_dependency 'rubyzip', '~> 3'
 end

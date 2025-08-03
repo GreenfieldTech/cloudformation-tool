@@ -71,7 +71,7 @@ module CloudFormationTool
           rdir path do |ent|
             _debug "Deflating #{ent}"
             filepath = File.join(path,ent)
-            zf.put_next_entry ::Zip::Entry.new(nil, ent, nil, nil, nil, nil, nil, nil, ::Zip::DOSTime.at(File.mtime(filepath).to_i))
+            zf.put_next_entry ::Zip::Entry.new(nil, ent, time: ::Zip::DOSTime.at(File.mtime(filepath).to_i))
             zf.write File.read(filepath) 
           end
         end.string
