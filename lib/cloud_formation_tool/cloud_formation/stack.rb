@@ -24,7 +24,7 @@ module CloudFormationTool
       end
       
       def region
-        @region
+        @region || super
       end
       
       def delete
