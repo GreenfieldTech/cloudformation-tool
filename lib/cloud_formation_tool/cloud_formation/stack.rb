@@ -86,6 +86,47 @@ module CloudFormationTool
         end
       end
       
+      def preview_changes(template, params = {})
+        @template = CloudFormation.parse(template).to_yaml(params)
+        url = upload(make_filename('yaml'), @template, gzip: false)
+        log "Previewing stack changes for '#{name}' from '#{template}' params #{params.inspect}"
+        valid_check do
+          resp = awscf.create_change_set({
+            stack_name: @name,
+            template_url: url,
+            capabilities: %w(CAPABILITY_IAM CAPABILITY_NAMED_IAM CAPABILITY_AUTO_EXPAND),
+            on_stack_failure: "DO_NOTHING", ##"ROLLBACK",
+            parameters: params.collect do |k,v|
+              {
+                parameter_key: k.to_s,
+                parameter_value: v.to_s,
+                use_previous_value: false,
+              }
+            end,
+            change_set_name: "preview-#{@name}-dryrun"
+          })
+          change_set_id = resp.id
+          loop do
+            resp = awscf.describe_change_set({change_set_name: change_set_id })
+            break unless %w( CREATE_PENDING CREATE_IN_PROGRESS ).include? resp.status
+          end
+          
+          puts "Update preview for '#{name}':"
+          puts "Status: #{resp.execution_status} | #{resp.status} | #{resp.status_reason}"
+          puts "---"
+          puts "Resource Changes:"
+          resp.changes.each do |change|
+            puts format_resource(change.resource_change, %w(
+                resource_type:40
+                logical_resource_id:42
+                action
+              )).join("  ") + " => " + change.resource_change.details.collect { |d| "#{d.evaluation}:#{d.target}" }.join(", ")
+          end
+          
+          awscf.delete_change_set({ change_set_name: change_set_id })
+        end
+      end
+      
       def stack_id
         @stack_id ||= awscf.describe_stacks(stack_name: @name).stacks.first.stack_id
       end
@@ -198,19 +239,11 @@ module CloudFormationTool
           until done
             reverse_each do |ev|
               next if @seenev.add?(ev.event_id).nil?
-              text = "#{ev.timestamp.strftime "%Y-%m-%d %H:%M:%S"}| " + %w(
+              text = "#{ev.timestamp.strftime "%Y-%m-%d %H:%M:%S"}| " + format_resource(ev, %w(
                 resource_type:40
                 logical_resource_id:42
                 resource_status
-              ).collect { |field|
-                (name,size) = field.split(":")
-                size ||= 1
-                (if name == 'logical_resource_id' and ev.stack_name != self.name
-                  logical_nested_stack_name(ev.stack_name) + "|"
-                else
-                  ''
-                end + ev.send(name.to_sym)).ljust(size.to_i, ' ')
-              }.join("  ")
+              )).join("  ")
               text += " " + ev.resource_status_reason if ev.resource_status =~ /_FAILED/
               if start_time.nil? or start_time < ev.timestamp
                 puts text
@@ -223,6 +256,18 @@ module CloudFormationTool
         rescue CloudFormationTool::Errors::StackDoesNotExistError => e
           puts "Stack #{name} does not exist"
         end
+      end
+      
+      def format_resource(res, columns)
+        columns.collect { |field|
+          (name,size) = field.split(":")
+          size ||= 1
+          (if name == 'logical_resource_id' and res.respond_to?(:stack_name) and res.stack_name != self.name
+            logical_nested_stack_name(res.stack_name) + "|"
+          else
+            ''
+          end + res.send(name.to_sym)).ljust(size.to_i, ' ')
+        }
       end
       
       def logical_nested_stack_name(phys_name)
